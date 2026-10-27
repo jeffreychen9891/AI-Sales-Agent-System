@@ -1,0 +1,33 @@
+{
+  "materials": {
+    "material:demo-price-plain:v1": "价格是一个月 1888，前十天免费试用，试用期内不收费，也不需要先付。",
+    "material:demo-price-flat:v1": "费用是包月的，一个月 1888，不按消息条数走——量涨上去它也不跟着涨。",
+    "material:demo-price-metered-cost:v1": "您付的就是 1888 这一个包月数，不会再按条加钱。它每回一句确实要花模型的钱，那部分我们自己担，按调用一条条记着，随时查得到。",
+    "material:demo-limit-replace-no:v1": "替不了人，这一点我不跟您绕。它能接住的是两件：「有人在」和「到点跟一句」。",
+    "material:demo-limit-metrics-none:v1": "人均能带多少客户、新人靠它多久上手——这两个数我们没量过，我不给您拍。拍出来的数您试完就知道是假的，那反而伤信任。",
+    "material:demo-limit-not-a-salesperson:v1": "把它当一个不睡觉的前台就挺好，别当销售看。前台的价值是「有人在」，不是「答得好」。",
+    "material:demo-promise-gate:v1": "涉及价格、交期、合同条款的话，只能用您审过的原文，改一个字都发不出去；引不到就整条不发，不会发一半。",
+    "material:demo-promise-gate-limit:v1": "有一条我得先说清楚：这道闸挡的是「哪一类话不许说」，不是「每句话都事实核对过一遍」。它讲错一个细节，这道闸拦不住。",
+    "material:demo-human-takeover:v1": "客户要找人，您那边同事点一下就把这通接过去，接过去之后它一句话都不插。",
+    "material:demo-human-not-self-escalate:v1": "不过它自己不会主动把这通转给人，转不转是您那边点的。这一点我先说明白。",
+    "material:demo-audit-what:v1": "每条消息都留着：为什么在那个时间发、按哪条规则、引了哪几条您审过的话。",
+    "material:demo-audit-boundary:v1": "边界说清楚：存下来的是它用了哪一类说法、引了哪几条、哪个模型哪一版，不是它「心里怎么想的」。依据查得到，思路查不到。",
+    "material:demo-industry-config:v1": "能说哪几类话、多久没回跟一句、几点之后不打扰——这些都写在一份配置里，换一个行业就换一份，不用改系统。",
+    "material:demo-vs-previous:v1": "以前那种靠提示词求它别乱说，这次是它每一轮能说哪一类话提前配好，不在名单里的根本发不出去。不是它学乖了，是那条路堵上了。",
+    "material:demo-bridge-to-capability:v1": "您说的这件它是这么接的：消息一来先回上去，晚上和忙的时候也一样，不让客户等；您或同事回头接手，前面聊了什么都在，不用客户再讲一遍；该跟进的到点主动跟一句。说出去的话全是您审过的那套，没审过的发不出去。您看这套对得上您那边的情况吗？",
+    "material:demo-trial-how:v1": "前十天免费，开通要您这边配合三件：企微账号授权、话术终审、对外资料原件。",
+    "material:demo-landing-next:v1": "真要往下走，我把对接清单发您，上面写了每一项谁负责、什么时候验收。",
+    "material:demo-func-close-negative:v1": "明白了，那这次确实不合适，之后不来打扰您。谢谢您愿意听我说这些。",
+    "material:demo-func-close-plain:v1": "好的，那就不打扰您了。之后想起什么随时找我。",
+    "material:demo-func-close-thanks:v1": "真的谢谢您花这几分钟，帮了我大忙。",
+    "material:demo-func-close-warm:v1": "那今天先到这儿。您那边要是换了同事管这一块，或者量涨上来了，随时找我，我都在。",
+    "material:demo-func-close-with-number:v1": "好的。价格一个月 1888、前十天免费这两个数您留着，什么时候想看了找我就行。",
+    "material:demo-open-what-we-do:v1": "您好！我们做的是企业微信上的客户接待——客户什么时候发消息都有人接得住，该跟进的到点主动跟一句，而对外说的话是您先审过的，没审过的发不出去。您那边现在客户消息主要是谁在盯？",
+    "material:demo-onboarding-what-we-need:v1": "您这边要出三样：管企微那位给个授权、您本人审一遍对外话术、再把现有的对外资料原件给我们。前两样十几分钟，慢的通常是终审那一步。",
+    "material:demo-onboarding-what-we-do:v1": "我们这边把账号接上、把您审过的话导进去、先跑一条测试对话给您看。跑通之前不碰您的真实客户。",
+    "material:demo-timeline-to-live:v1": "授权当天就能接上，真正等的是话术终审——那一步在您这边，您回得快就快。免费那十天从跑通那天算，不从谈成那天算。",
+    "material:demo-payment-how:v1": "月付年付都行，对公转账，能开增值税专用发票。合同用您那边的模板还是我们的都可以。具体条款要人来谈，我这边不替您定。",
+    "material:demo-data-where:v1": "对话存在我们的库里，按租户隔开，别家看不到您这边的。有一件要跟您说清楚：每回一句都会把这一轮的上下文和用得上的那几段话术发给模型供应商，这一段我不瞒您。",
+    "material:demo-data-delete:v1": "要清的时候整个租户一起清，清完就查不到了。谁在什么时候清的会留一行记录，那行记录里不含正文。"
+  }
+}

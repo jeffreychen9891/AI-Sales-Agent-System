@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/control-plane/command-receipt.schema.json",
+  "title": "CommandReceipt",
+  "description": "control-plane-parity.md 5.2. Acceptance is not execution: `accepted` means the command is durable and will be worked, not that it has happened. `unknown` is required, not optional: conversation-engine.md §3.5 `ChannelAdapter` fixes the receipt vocabulary — its words are `SendReceipt.status = accepted|delivered|failed|unknown` — and §7.3 报价/订单 saga forbids collapsing an unconfirmed outcome into a confirmed one: 「没有可靠 inverse 时保持 UNKNOWN/manual，不伪造回滚成功」, while parity 5.2 requires a receipt for every external channel action. Mapping: SendReceipt accepted|delivered -> succeeded; SendReceipt failed -> failed; SendReceipt unknown and IntentRecord UNKNOWN -> unknown, resolved by the delivery reconcile path, which is also what raises the manual task.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "command_id", "status", "resource_ref", "accepted_at",
+    "idempotency_key", "correlation_id"
+  ],
+  "properties": {
+    "command_id": {"type": "string", "format": "uuid"},
+    "status": {"enum": ["accepted", "succeeded", "failed", "unknown"]},
+    "resource_ref": {"$ref": "https://fastagent.local/contracts/control-plane/resource-ref.schema.json"},
+    "accepted_at": {"type": "string", "format": "date-time"},
+    "idempotency_key": {"type": "string", "minLength": 1},
+    "correlation_id": {"type": "string", "format": "uuid"}
+  }
+}

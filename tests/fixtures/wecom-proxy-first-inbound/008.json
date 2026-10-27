@@ -1,0 +1,61 @@
+{
+ "code": 0,
+ "data": [
+  {
+   "TenantId": 0,
+   "base64RawData": {
+    "__redacted__": "large-value",
+    "length_chars": 1136,
+    "sha256": "74f7c077b73ce9e6de69b80859cb36b220c5c6f6dcf5e5e411a66daa0926d9dc",
+    "head": "EhdpbmR1c3RyeS1wYWNrLXNjaGVtYS5tZBroBGh0dHBzOi8vaW11bmlvbi53ZWl4",
+    "tail": "MDRmNTcxOGNiOTJlZDhiZTlkYjI0NGY=",
+    "base64_decodes": true,
+    "decoded_prefix_hex": "1217696e6475737472792d7061636b2d"
+   },
+   "cmd": 15000,
+   "customParam": "v2-stage-01",
+   "fromRoomId": "<id-01>",
+   "guid": "D05FCC41-9740-4932-81A4-6A54E8836AFF",
+   "isRoomNotice": "<id-01>",
+   "msgData": {
+    "extras": null,
+    "fileAesKey": {
+     "__redacted__": "media-key",
+     "length_chars": 32,
+     "sha256": "31634301a1d1bcfed4e81546c100e02eb9149e435a2c0e4e11e4bca4aecb043c",
+     "prefix": ""
+    },
+    "fileAuthKey": {
+     "__redacted__": "media-key",
+     "length_chars": 131,
+     "sha256": "3a7d35e76bbd2d4041364eb29583e81dd351cfb0bc19af111b9beb384820a437",
+     "prefix": "v1_"
+    },
+    "fileHttpUrl": {
+     "__redacted__": "large-value",
+     "length_chars": 616,
+     "sha256": "762202d7b7342e914befe7d354357fd9f127d8db8c8d148b41971bed8acb3b71",
+     "head": "https://imunion.weixin.qq.com/cgi-bin/mmae-bin/tpdownloadmedia?p",
+     "tail": "3acb24483040e2f1b5bd98478315d6f6",
+     "base64_decodes": false
+    },
+    "fileMd5": "4f1ff40b95d1b9155e0026a1042ee50d",
+    "fileSize": 21417,
+    "filename": "industry-pack-schema.md"
+   },
+   "msgFlag": 16777216,
+   "msgServerId": 1000866,
+   "msgType": 102,
+   "msgUniqueIdentifier": "8759799122723133346",
+   "receiverId": "<id-02>",
+   "referId": 0,
+   "requestId": "d6687c66d3001743ea88922e80a64051",
+   "senderId": "<id-03>",
+   "senderName": "",
+   "seq": 17350626,
+   "timestamp": 1789003447,
+   "userId": "<id-02>"
+  }
+ ],
+ "msg": "ok"
+}

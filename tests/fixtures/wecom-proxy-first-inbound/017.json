@@ -1,0 +1,39 @@
+{
+  "code": 0,
+  "data": [
+    {
+      "TenantId": 0,
+      "base64RawData": "CrgBCAASswEKsAFodHRwczovL2V4YW1wbGUuaW52YWxpZC93aXRoaGVsZC1saW5rLXh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA==",
+      "cmd": 15000,
+      "customParam": "v2-stage-01",
+      "fromRoomId": "<id-01>",
+      "guid": "D05FCC41-9740-4932-81A4-6A54E8836AFF",
+      "isRoomNotice": "<id-01>",
+      "msgData": {
+        "atList": [],
+        "content": "https://example.invalid/withheld-link-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "extras": null,
+        "moreDetail": [
+          {
+            "subtype": 0,
+            "text": "https://example.invalid/withheld-link-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        ],
+        "reply": {}
+      },
+      "msgFlag": 16777216,
+      "msgServerId": 1000863,
+      "msgType": 2,
+      "msgUniqueIdentifier": "8618034883823383397",
+      "receiverId": "<id-02>",
+      "referId": 0,
+      "requestId": "1aee2bcf7aef5d78f0bb71cf5dd57a66",
+      "senderId": "<id-03>",
+      "senderName": "",
+      "seq": 17350625,
+      "timestamp": 1789003394,
+      "userId": "<id-02>"
+    }
+  ],
+  "msg": "ok"
+}

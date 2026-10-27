@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/control-plane/error-envelope.schema.json",
+  "title": "ErrorEnvelope",
+  "description": "control-plane-parity.md 5.2. Returns no secret, no internal stack and no cross-tenant existence. `code` is a machine token because the same section forbids pages from branching on a human-readable message; there is no `stack`/`detail` property and additionalProperties is false, so an internal trace has nowhere to land.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["code", "message", "request_id", "field_errors", "retryable"],
+  "properties": {
+    "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+    "message": {"type": "string"},
+    "request_id": {"type": "string", "format": "uuid"},
+    "field_errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "code"],
+        "properties": {
+          "field": {"type": "string", "minLength": 1},
+          "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}
+        }
+      }
+    },
+    "retryable": {"type": "boolean"}
+  }
+}

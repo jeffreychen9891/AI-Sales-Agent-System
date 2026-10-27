@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/scheduled-event.schema.json",
+  "title": "ScheduledEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "tenant_id", "conversation_id", "due_at", "kind", "dedupe_key", "profile_release_id", "aggregate_generation", "target_frame_id", "target_stack_version", "payload_ref", "status", "attempt", "created_by_transition_id"],
+  "properties": {
+    "id": {"type": "string", "format": "uuid"},
+    "tenant_id": {"type": "string", "format": "uuid"},
+    "conversation_id": {"type": "string", "format": "uuid"},
+    "due_at": {"type": "string", "format": "date-time"},
+    "kind": {"enum": ["silence_check", "goal_stall", "followup_due", "customer_promise_due", "dormant_reengagement", "business_event_followup", "ai_commitment_due"]},
+    "dedupe_key": {"type": "string", "minLength": 1, "maxLength": 255},
+    "profile_release_id": {"type": "string", "format": "uuid"},
+    "aggregate_generation": {"type": "integer", "minimum": 0},
+    "target_frame_id": {"type": "string", "format": "uuid"},
+    "target_stack_version": {"type": "integer", "minimum": 0},
+    "commitment_id": {"type": ["string", "null"], "format": "uuid"},
+    "business_event_id": {"type": ["string", "null"], "format": "uuid"},
+    "payload_ref": {"type": "object"},
+    "status": {"enum": ["PENDING", "CLAIMED", "ENQUEUED", "CONSUMED", "INVALIDATED", "CANCELLED", "FAILED"]},
+    "lease_owner": {"type": ["string", "null"]},
+    "lease_expires_at": {"type": ["string", "null"], "format": "date-time"},
+    "attempt": {"type": "integer", "minimum": 0},
+    "timer_envelope_id": {"type": ["string", "null"], "format": "uuid"},
+    "invalidated_at": {"type": ["string", "null"], "format": "date-time"},
+    "invalidation_reason": {"type": ["string", "null"]},
+    "invalidated_by_event_id": {"type": ["string", "null"], "format": "uuid"},
+    "created_by_transition_id": {"type": "string", "format": "uuid"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "PENDING"}}},
+      "then": {"properties": {
+        "lease_owner": {"type": "null"}, "lease_expires_at": {"type": "null"},
+        "timer_envelope_id": {"type": "null"}, "invalidated_at": {"type": "null"},
+        "invalidation_reason": {"type": "null"}, "invalidated_by_event_id": {"type": "null"}
+      }}
+    },
+    {
+      "if": {"properties": {"status": {"const": "CLAIMED"}}},
+      "then": {
+        "required": ["lease_owner", "lease_expires_at"],
+        "properties": {
+          "lease_owner": {"type": "string", "minLength": 1},
+          "lease_expires_at": {"type": "string", "format": "date-time"},
+          "timer_envelope_id": {"type": "null"}, "invalidated_at": {"type": "null"},
+          "invalidation_reason": {"type": "null"}, "invalidated_by_event_id": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["ENQUEUED", "CONSUMED"]}}},
+      "then": {
+        "required": ["timer_envelope_id"],
+        "properties": {
+          "timer_envelope_id": {"type": "string", "format": "uuid"},
+          "lease_owner": {"type": "null"}, "lease_expires_at": {"type": "null"},
+          "invalidated_at": {"type": "null"}, "invalidation_reason": {"type": "null"},
+          "invalidated_by_event_id": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "INVALIDATED"}}},
+      "then": {
+        "required": ["invalidated_at", "invalidation_reason"],
+        "properties": {
+          "lease_owner": {"type": "null"}, "lease_expires_at": {"type": "null"},
+          "invalidated_at": {"type": "string", "format": "date-time"},
+          "invalidation_reason": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  ]
+}

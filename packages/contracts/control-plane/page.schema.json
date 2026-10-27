@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/control-plane/page.schema.json",
+  "title": "Page",
+  "description": "control-plane-parity.md 5.1. Cursor pagination. There is deliberately no `offset`/`page`/`total` property and `additionalProperties` is false: the rule is that an unstable offset must not become the long-term pagination fact, and the cheapest way to hold that line is to make the field unrepresentable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items", "next_cursor", "has_more", "as_of"],
+  "properties": {
+    "items": {"type": "array"},
+    "next_cursor": {"type": ["string", "null"], "minLength": 1},
+    "has_more": {"type": "boolean"},
+    "as_of": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"has_more": {"const": true}}, "required": ["has_more"]},
+      "then": {"properties": {"next_cursor": {"type": "string"}}}
+    },
+    {
+      "if": {"properties": {"has_more": {"const": false}}, "required": ["has_more"]},
+      "then": {"properties": {"next_cursor": {"type": "null"}}}
+    }
+  ]
+}

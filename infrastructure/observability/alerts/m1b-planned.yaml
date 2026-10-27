@@ -1,0 +1,126 @@
+# M1b 规划中的告警规则 —— **计划态：规则还没建，但大部分指标已经有源了。**
+#
+# 来源：ADR-0101 §三.3（规则形状与建议起始阈值，用户 2026-09-07 裁定），
+# 加同日增补的第九条指标（plan_no_send_total），
+# 加 ADR-0103 §二.2 的入站两条与用户同日追加的第三条。
+#
+# **2026-09-08 更新：原文写着「对应指标今天还不存在」，那句话已经过时了。**
+# 采集器装好并在推（B0-4，S5 已供给），指标分三种状态，逐条列在下面——
+# **混着写就等于没写**：一条永远 No Data 的规则和一条还没有源的规则，
+# 在屏幕上长得一样，而处置完全不同。
+#
+# | 指标 | 有源了吗 | 谁交付的 |
+# |---|---|---|
+# | root_frame_abandoned_total | ✅ | B0-5 |
+# | manual_task_open_total | ✅ | B0-5 |
+# | delivery_unknown_total | ✅ | B0-5 |
+# | delivery_attempts_exhausted_total | ✅ | B0-5 |
+# | scheduler_lag_seconds | ✅ | B0-5 |
+# | plan_no_send_total{reason_code} | ✅ | B0-5 |
+# | ingress_consecutive_failures{config_id} | ✅ | **B3-4b** |
+# | ingress_non_2xx_total{reason} | ✅ | **B3-4b** |
+# | ingress_refused_total{reason} | ✅ | **B3-4b** |
+# | proactive_delivered_total{kind} | ❌ 还没有 | M1b **B4**（主动性本体） |
+# | proactive_suppressed_total{reason} | ❌ 还没有 | M1b **B4** |
+# | rate_limited_total{scope} | ✅ | **B1-6**（速率门） |
+#
+# **没有源的两条不要现在建规则**：它们会永远 No Data，而 No Data 是本仓
+# 用来表示「该看一眼」的信号（ADR-0101 §三.1）。三条永远亮着的灯，
+# 会把这套告警的可信度一起烧掉。**等它们的功能批次交付了再建。**
+#
+# **2026-09-08：`rate_limited_total{scope}` 由 B1-6 交付，上表那一行已改成 ✅。**
+# 剩下没有源的是 proactive 那两条，等 B4。
+#
+# 规则仍然由用户在 Grafana 里建（B0-7）。建完之后**从账号导出并替换本文件**，
+# 同时改 ../README.md 那张表。
+#
+# 两条通则（ADR-0101 §三.1），建规则时要一起带上：
+#   * 标签有界，**不得含 conversation / tenant / customer 标识符**；
+#   * **无数据不推 0.0，推 No Data**——「No Data makes people look; Normal does not」
+#     （2026-09-04 记下的教训，T71 独立审查 F4）。
+
+apiVersion: 1
+source: authored-from-adr-0101 # 计划态，不是导出
+authored_at: 2026-09-07
+
+groups:
+  - folder: FastAgent v2 Stage
+    name: m1b-stage-planned
+    interval: 1m
+    contact_point: v2-sev-alerts
+    rules:
+      - title: 根帧放弃速率
+        expr: increase(fastagent_v2_stage_root_frame_abandoned_total[1h])
+        condition: IS ABOVE N
+        threshold: null # **先观察一周再定**；T54 的量级变化当时没有被裁到
+        why: 平台停止为某个客户服务的速率
+
+      - title: 人工任务积压
+        expr: fastagent_v2_stage_manual_task_open_total{class="需商家介入"}
+        condition: IS ABOVE N
+        for: 30m # 瞬时尖峰不是问题，**没人处理**才是
+        threshold: null
+        why: 积压有多少、有没有 owner
+
+      - title: 投递未知
+        expr: increase(fastagent_v2_stage_delivery_unknown_total[1h])
+        condition: IS ABOVE 0
+        for: 2 evaluation periods
+        threshold: 0
+        why: 换掉 `.invalid` 之后它应当归零；**归不了零就是接线没通**
+
+      - title: 调度滞后
+        expr: fastagent_v2_stage_scheduler_lag_seconds
+        condition: IS ABOVE 300
+        threshold: 300
+        why: RFC §6.3 只写「超阈值告警」没给数；5 分钟是 M1b 量级下的保守起点
+
+      - title: 主动被抑制（配额打满）
+        expr: increase(fastagent_v2_stage_proactive_suppressed_total{reason="cap_exhausted"}[24h])
+        condition: IS ABOVE N
+        threshold: null
+        why: 配额被打满说明节奏模板配错了，不是客户的问题
+
+      - title: 速率门触发
+        expr: increase(fastagent_v2_stage_rate_limited_total[1h])
+        condition: IS ABOVE 0
+        threshold: 0
+        why: 那两个数是拍的；**第一次触发就该有人看一眼**，这是校准的输入
+
+      - title: 回调将被删除
+        expr: fastagent_v2_stage_ingress_consecutive_failures
+        condition: IS ABOVE 5
+        for: null # **不设持续时间**——删除不可逆，等不起
+        threshold: 5
+        why: >-
+          供应商的删除判据是**连续 10 次**非 200，取 5 是留一半余量。
+          **必须是「连续」不是「总数」**，收到 200 即归零。
+          不拿供应商侧 errorTimes 作主指标（FORBIDDEN_OPERATIONS 含 list_clients，
+          多半读不到）；若落地时发现可读，作为第三条指标做对账。
+
+      - title: 模型输出不合规
+        expr: increase(fastagent_v2_stage_plan_no_send_total{reason_code="PROVIDER_MALFORMED_OUTPUT"}[1h])
+        condition: IS ABOVE 0
+        threshold: 0
+        why: >-
+          ADR-0084 Q4 裁定「失败关闭、不重试、不加修复层，**但必须计入指标**」——
+          这条规则就是那句「必须计入」的兑现。今天这个数应该是零，
+          第一次不是零就该有人看一眼。**用户 2026-09-07 裁定新增该指标**
+          （ADR-0101 §三.2 增补），交付在 B0-5。
+
+# 归因用、**不建规则**的四条（原文写「两条」而列了三行，一并改对）：
+#   fastagent_v2_stage_ingress_non_2xx_total{reason}
+#   fastagent_v2_stage_ingress_refused_total{reason}
+#   fastagent_v2_stage_delivery_attempts_exhausted_total
+#   fastagent_v2_stage_proactive_delivered_total{kind}
+# 它们是出事之后要看的分布，不是叫醒人的判据。
+#
+# **第二条 2026-09-08 才补进 ADR-0103 §二.2**，在那之前它只活在 B3-4 的两份
+# 审查记录里，而本文件不能先于图纸写下一个指标名——
+# `tests/contracts/test_observability_declarative_copy.py` 的守卫管着这条，
+# 而且管得对：声明式副本一旦可以写 ADR 里没有的东西，它就从「图纸的副本」
+# 变成「第二张图纸」，两张会各自漂移。**ADR 补齐了，名字才回到这里。**
+#
+# **它为什么在这一组而不是有自己的规则**：这类拒绝不消耗供应商的删除额度
+# （那正是 B3-4 把它们改成 200 的原因），所以它不守任何不可逆后果，没有阈值可言；
+# 要定阈值得先知道正常水位，而入站还没开（K16 未解锁）。**不替用户拍这个数。**

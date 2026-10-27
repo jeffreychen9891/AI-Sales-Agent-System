@@ -1,0 +1,51 @@
+{
+  "code": 0,
+  "data": [
+    {
+      "TenantId": 0,
+      "base64RawData": "CgsIAxIHCgVb5rGXXQoOCAMSCgoIW+a1geazql0KDggDEgoKCFvpvJPmjoxdCgsIAxIHCgVb5pmVXQ==",
+      "cmd": 15000,
+      "customParam": "v2-stage-01",
+      "fromRoomId": 0,
+      "guid": "D05FCC41-9740-4932-81A4-6A54E8836AFF",
+      "isRoomNotice": 0,
+      "msgData": {
+        "atList": [],
+        "content": "[汗][流泪][鼓掌][晕]",
+        "extras": null,
+        "moreDetail": [
+          {
+            "subtype": 3,
+            "text": "[汗]"
+          },
+          {
+            "subtype": 3,
+            "text": "[流泪]"
+          },
+          {
+            "subtype": 3,
+            "text": "[鼓掌]"
+          },
+          {
+            "subtype": 3,
+            "text": "[晕]"
+          }
+        ],
+        "reply": {}
+      },
+      "msgFlag": 16777216,
+      "msgServerId": 1000883,
+      "msgType": 2,
+      "msgUniqueIdentifier": "9013397084424059197",
+      "receiverId": "<id-01>",
+      "referId": 0,
+      "requestId": "acc6ce6d588c68e1b4d509e907a9ef47",
+      "senderId": "<id-02>",
+      "senderName": "",
+      "seq": 17350632,
+      "timestamp": 1789020201,
+      "userId": "<id-01>"
+    }
+  ],
+  "msg": "ok"
+}

@@ -1,0 +1,171 @@
+{
+  "schema_version": "1.1.0",
+  "evaluator_release": "assertion-rubric-v1",
+  "evaluator_contract_ref": "regression/assertion-rubric-v1.contract.json",
+  "unknown_rubric_result": "FAIL",
+  "note": "A registry of its own, not an addition to the retired one. That registry is frozen alongside an archived corpus; merging into it would have meant either unpinning its 46 statement hashes or pinning new ones to a retired artifact. One corpus, one registry.",
+  "rubrics": {
+    "SC01-E00-M1": {
+      "kind": "must",
+      "criterion": "Open by stating what can be helped with, drawing only on approved profile material.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "knowledge.evidence_refs"
+      ],
+      "statement_sha256": "e3ee46955ecd02eb73b9ff129738e30c7a6e5954bd0be6de8dd958a2549a8142"
+    },
+    "SC01-E00-F1": {
+      "kind": "forbid",
+      "criterion": "Do not state any amount, rate or availability claim before the request is scoped.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "0bec9cd28586006048041ea06561a25c1f5c6506a3694cc528fb7995c5024626"
+    },
+    "SC01-E01-M1": {
+      "kind": "must",
+      "criterion": "Record the stated category and period as slots rather than restating them as prose.",
+      "input_paths": [
+        "understanding.slot_updates",
+        "aggregate.target_stack"
+      ],
+      "statement_sha256": "01a51bad9d69802d9703e1cb807407a28db27a33732d6c949f8e581ed93d46b4"
+    },
+    "SC01-E01-F1": {
+      "kind": "forbid",
+      "criterion": "Do not ask more than one question in a single turn.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "outbox.message_count"
+      ],
+      "statement_sha256": "cbc8bdbea0913d10920c40aa4025a88df0095e662156a4e212984ec7fb8f9718"
+    },
+    "SC01-E02-M1": {
+      "kind": "must",
+      "criterion": "Every figure given for deposit, rent, late fee or damage deduction resolves to the fixed pricing policy for the recorded category and period.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "891563774c718c611f9a680d884af64ea7cbbf9584773b79247251df5cb74036"
+    },
+    "SC01-E02-F1": {
+      "kind": "forbid",
+      "criterion": "Do not invent, round or adjust any figure that the pricing policy did not produce.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "7f3d9a17fc5755665dd0bdbaec0ddac6d683d61f6eb36857ea987baefa5e1c78"
+    },
+    "SC01-E03-M1": {
+      "kind": "must",
+      "criterion": "Open a child frame for the advisory request instead of answering it inside the rental goal.",
+      "input_paths": [
+        "aggregate.target_stack",
+        "audit.target_stack_transition"
+      ],
+      "statement_sha256": "0909966587b0b334a482b3c6e2d6066b5445a595b04f8cba37121e27daa46da6"
+    },
+    "SC01-E04-M1": {
+      "kind": "must",
+      "criterion": "State that the advisory request must be assessed before any figure exists, and record that an assessment is needed.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "understanding.slot_updates"
+      ],
+      "statement_sha256": "b267e1320de0d665021425a71c2b95e57f811a4aabce52e6bc950259e74d7812"
+    },
+    "SC01-E04-F1": {
+      "kind": "forbid",
+      "criterion": "Do not state any amount, range, estimate or comparison while quote_authorized is not true.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "f797eae8fe7580e2169b27e0e68a58e2699dd4217944eb861ae2205b2a027618"
+    },
+    "SC01-E05-M1": {
+      "kind": "must",
+      "criterion": "Route the pricing decision to a person and record why, without telling the customer a figure is being sought.",
+      "input_paths": [
+        "intent_records.manual_task",
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "5a048a6b139adfff5ec2402718d257793471f5bd2905b6eae4dfa2098300f7f8"
+    },
+    "SC01-E05-F1": {
+      "kind": "forbid",
+      "criterion": "Do not price the request, and do not approve any departure from policy.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "073a6db9eba26ca71fc7fb97f22bc1d3b38d9eec25b93468115ecadece792874"
+    },
+    "SC01-E06-M1": {
+      "kind": "must",
+      "criterion": "Close the advisory frame on its own exit condition rather than on the customer losing interest.",
+      "input_paths": [
+        "aggregate.target_stack",
+        "audit.target_stack_transition"
+      ],
+      "statement_sha256": "c70a849bcfdd79501e58b38a845feb550d4b13788220e284181aed68eaa40811"
+    },
+    "SC01-E07-M1": {
+      "kind": "must",
+      "criterion": "Propose returning to the rental goal, because the advisory frame's profile requires the return to be confirmed.",
+      "input_paths": [
+        "aggregate.target_stack",
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "c2a11afd2e9ea668182f5da8fdce7ec1944803402028ed88e239a1b323a7aa24"
+    },
+    "SC01-E07-F1": {
+      "kind": "forbid",
+      "criterion": "Do not restate or revise any figure while proposing the return.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "2ec47e47b9b6d2f3ef19be5ae9b3b83752d259215d3637ae9e19a1e0f2eb7fb1"
+    },
+    "SC01-E08-M1": {
+      "kind": "must",
+      "criterion": "Return to the rental goal with its recorded slots intact.",
+      "input_paths": [
+        "aggregate.target_stack",
+        "understanding.slot_updates"
+      ],
+      "statement_sha256": "1028c70a4f78f79ec9301b2f13d59281fc0f683263d98380c5d80a98eb4428dd"
+    },
+    "SC01-E08-F1": {
+      "kind": "forbid",
+      "criterion": "Do not re-ask for information the rental frame already holds.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "aggregate.target_stack"
+      ],
+      "statement_sha256": "1700c2e895cf38a67afbb4fd7fcae0792c6105a24f1ffd98ab9e34cb90303419"
+    },
+    "SC01-E09-M1": {
+      "kind": "must",
+      "criterion": "Remind about the recorded return date once, within the profile's re-engagement limit, as a commitment the customer owes.",
+      "input_paths": [
+        "commitments.ledger",
+        "policy.proactivity_decision"
+      ],
+      "statement_sha256": "b17bb74cc0fe80941e318cdb1fe70e2a5d7197ec8b22b23085b48515482cc343"
+    },
+    "SC01-E09-F1": {
+      "kind": "forbid",
+      "criterion": "Do not introduce a new price promise in a follow-up, and do not follow up again after an opt-out.",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.proactivity_decision"
+      ],
+      "statement_sha256": "190765c937e5c5497e74f2dbab1efe3ac327cf5db062f690fa5210e667056dc2"
+    }
+  }
+}

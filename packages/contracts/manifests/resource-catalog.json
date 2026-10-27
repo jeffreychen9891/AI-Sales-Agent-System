@@ -1,0 +1,271 @@
+{
+  "service_health": {
+    "tenant_owned": false,
+    "actions": [
+      "service_health.read"
+    ],
+    "platform": false
+  },
+  "tenant": {
+    "tenant_owned": true,
+    "actions": [
+      "tenant.delete",
+      "tenant.list_active_for_worker",
+      "tenant.read",
+      "tenant.resolve_for_login",
+      "tenant.update"
+    ],
+    "platform_only_actions": [
+      "tenant.delete",
+      "tenant.update"
+    ]
+  },
+  "tenant_manager_contact": {
+    "tenant_owned": true,
+    "actions": [
+      "tenant_manager_contact.update"
+    ]
+  },
+  "tenant_registry": {
+    "tenant_owned": false,
+    "actions": [
+      "tenant_registry.create",
+      "tenant_registry.list"
+    ],
+    "platform": true
+  },
+  "session": {
+    "tenant_owned": true,
+    "actions": [
+      "session.create",
+      "session.delete",
+      "session.read_own"
+    ]
+  },
+  "websocket_ticket": {
+    "tenant_owned": true,
+    "actions": [
+      "websocket_ticket.create",
+      "websocket_ticket.consume"
+    ]
+  },
+  "profile_release": {
+    "tenant_owned": true,
+    "actions": [
+      "profile_release.create",
+      "profile_release.read"
+    ]
+  },
+  "channel_config": {
+    "tenant_owned": true,
+    "actions": [
+      "channel_config.list",
+      "channel_config.manage_secret",
+      "channel_config.resolve_for_auth",
+      "channel_config.update"
+    ]
+  },
+  "inbox_event": {
+    "tenant_owned": true,
+    "actions": [
+      "inbox_event.create",
+      "inbox_event.claim",
+      "inbox_event.consume"
+    ],
+    "service_actions": [
+      "inbox_event.claim",
+      "inbox_event.create"
+    ]
+  },
+  "conversation_aggregate": {
+    "tenant_owned": true,
+    "actions": [
+      "conversation_aggregate.list",
+      "conversation_aggregate.read",
+      "conversation_aggregate.update"
+    ],
+    "service_actions": [
+      "conversation_aggregate.update"
+    ]
+  },
+  "contact": {
+    "tenant_owned": true,
+    "actions": [
+      "contact.list",
+      "contact.read"
+    ]
+  },
+  "control_policy": {
+    "tenant_owned": true,
+    "actions": [
+      "control_policy.read",
+      "control_policy.update"
+    ]
+  },
+  "conversation_read_cursor": {
+    "tenant_owned": true,
+    "actions": [
+      "conversation_read_cursor.update"
+    ]
+  },
+  "conversation_slot": {
+    "tenant_owned": true,
+    "actions": [
+      "conversation_slot.update"
+    ]
+  },
+  "manual_task": {
+    "tenant_owned": true,
+    "actions": [
+      "manual_task.create",
+      "manual_task.list",
+      "manual_task.claim",
+      "manual_task.cancel"
+    ]
+  },
+  "manual_task_resolution": {
+    "kind": "command",
+    "tenant_owned": true,
+    "actions": [
+      "manual_task_resolution.create"
+    ]
+  },
+  "manual_task_reassignment": {
+    "kind": "command",
+    "tenant_owned": true,
+    "actions": [
+      "manual_task_reassignment.create"
+    ]
+  },
+  "message": {
+    "tenant_owned": true,
+    "actions": [
+      "message.list"
+    ]
+  },
+  "scheduled_event": {
+    "tenant_owned": true,
+    "actions": [
+      "scheduled_event.create",
+      "scheduled_event.claim",
+      "scheduled_event.enqueue",
+      "scheduled_event.invalidate"
+    ],
+    "service_actions": [
+      "scheduled_event.claim",
+      "scheduled_event.enqueue",
+      "scheduled_event.invalidate"
+    ]
+  },
+  "intent_record": {
+    "tenant_owned": true,
+    "actions": [
+      "intent_record.create",
+      "intent_record.approve",
+      "intent_record.execute"
+    ],
+    "service_actions": [
+      "intent_record.approve",
+      "intent_record.create",
+      "intent_record.execute"
+    ]
+  },
+  "outbox_message": {
+    "tenant_owned": true,
+    "actions": [
+      "outbox_message.create",
+      "outbox_message.execute",
+      "outbox_message.reconcile"
+    ],
+    "service_actions": [
+      "outbox_message.create",
+      "outbox_message.execute",
+      "outbox_message.reconcile"
+    ]
+  },
+  "profile_schema": {
+    "tenant_owned": false,
+    "actions": [
+      "profile_schema.read"
+    ],
+    "platform": false
+  },
+  "employee": {
+    "tenant_owned": true,
+    "actions": [
+      "employee.change_own_password",
+      "employee.create",
+      "employee.delete",
+      "employee.list",
+      "employee.read",
+      "employee.update"
+    ]
+  },
+  "employee_role": {
+    "tenant_owned": true,
+    "actions": [
+      "employee_role.update"
+    ]
+  },
+  "role": {
+    "tenant_owned": true,
+    "actions": [
+      "role.create",
+      "role.delete",
+      "role.list",
+      "role.update"
+    ]
+  },
+  "permission": {
+    "tenant_owned": false,
+    "actions": [
+      "permission.list"
+    ],
+    "platform": false
+  },
+  "conversation_takeover": {
+    "kind": "command",
+    "tenant_owned": true,
+    "actions": [
+      "conversation_takeover.create"
+    ]
+  },
+  "conversation_message": {
+    "kind": "command",
+    "tenant_owned": true,
+    "actions": [
+      "conversation_message.create"
+    ]
+  },
+  "conversation_resume": {
+    "kind": "command",
+    "tenant_owned": true,
+    "actions": [
+      "conversation_resume.create"
+    ]
+  },
+  "employee_password_reset": {
+    "kind": "command",
+    "tenant_owned": true,
+    "actions": [
+      "employee_password_reset.create"
+    ]
+  },
+  "material": {
+    "tenant_owned": true,
+    "actions": [
+      "material.invalidate",
+      "material.list",
+      "material.read"
+    ]
+  },
+  "contact_memory": {
+    "tenant_owned": true,
+    "actions": [
+      "contact_memory.create",
+      "contact_memory.invalidate",
+      "contact_memory.list",
+      "contact_memory.update"
+    ]
+  }
+}

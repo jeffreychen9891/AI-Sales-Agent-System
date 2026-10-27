@@ -1,0 +1,42 @@
+{
+  "code": 0,
+  "data": [
+    {
+      "TenantId": 0,
+      "base64RawData": "GAAglsvn+ImAgA4oopi4o5OAgAMwADgCQhEKDwgAEgsKCe+8n++8n++8n2DAkInVBmiggIAIehMzMzg4MTI5NzY1NDk5MDgwNzY2qAEA",
+      "cmd": 15000,
+      "customParam": "v2-stage-01",
+      "fromRoomId": 0,
+      "guid": "D05FCC41-9740-4932-81A4-6A54E8836AFF",
+      "isRoomNotice": 0,
+      "msgData": {
+        "extras": {
+          "base64RawData": "krwBAgoAoL4BAKq+AVIKII9WXfVkrQ+SL10ZLEW/PFO2GhEy++/UuJCoUwQtJgAHEAIaLAjBkInVBhACGhMzMzg4MTI5NzY1NDk5MDgwNzY2IgIQADCimLijk4CAAzgB",
+          "signedMsg": {
+            "infoBuffer": "CMGQidUGEAIaEzMzODgxMjk3NjU0OTkwODA3NjYiAhAAMKKYuKOTgIADOAE=",
+            "originalContentType": 2,
+            "signature": "<id-03>"
+          },
+          "signedMsgRaw": "CiCPVl31ZK0Pki9dGSxFvzxTthoRMvvv1LiQqFMELSYABxACGiwIwZCJ1QYQAhoTMzM4ODEyOTc2NTQ5OTA4MDc2NiICEAAwopi4o5OAgAM4AQ=="
+        },
+        "fromRoomId": 0,
+        "revokeMsgUniqueIdentifier": "3388129765499080766",
+        "revokeTime": 1789020224,
+        "revokeUserId": "<id-02>"
+      },
+      "msgFlag": 0,
+      "msgServerId": 1000895,
+      "msgType": 2063,
+      "msgUniqueIdentifier": "j615NM_iT-SU07r",
+      "receiverId": "<id-01>",
+      "referId": 0,
+      "requestId": "5ad22a85eb41f20bbddaeacbfe850bfe",
+      "senderId": "<id-02>",
+      "senderName": "",
+      "seq": 17350636,
+      "timestamp": 1789020227,
+      "userId": "<id-01>"
+    }
+  ],
+  "msg": "ok"
+}

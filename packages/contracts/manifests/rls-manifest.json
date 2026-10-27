@@ -1,0 +1,149 @@
+[
+  {
+    "table": "tenants",
+    "policy": "tenants_tenant_isolation"
+  },
+  {
+    "table": "employees",
+    "policy": "employees_tenant_isolation"
+  },
+  {
+    "table": "employee_sessions",
+    "policy": "employee_sessions_tenant_isolation"
+  },
+  {
+    "table": "profile_releases",
+    "policy": "profile_releases_tenant_isolation"
+  },
+  {
+    "table": "channel_bindings",
+    "policy": "channel_bindings_tenant_isolation"
+  },
+  {
+    "table": "contact_memories",
+    "policy": "contact_memories_tenant_isolation"
+  },
+  {
+    "table": "ingress_replay_keys",
+    "policy": "ingress_replay_keys_tenant_isolation"
+  },
+  {
+    "table": "contacts",
+    "policy": "contacts_tenant_isolation"
+  },
+  {
+    "table": "conversation_aggregates",
+    "policy": "conversation_aggregates_tenant_isolation"
+  },
+  {
+    "table": "inbox_events",
+    "policy": "inbox_events_tenant_isolation"
+  },
+  {
+    "table": "scheduled_events",
+    "policy": "scheduled_events_tenant_isolation"
+  },
+  {
+    "table": "intent_records",
+    "policy": "intent_records_tenant_isolation"
+  },
+  {
+    "table": "employee_read_cursors",
+    "policy": "employee_read_cursors_tenant_isolation"
+  },
+  {
+    "table": "manual_tasks",
+    "policy": "manual_tasks_tenant_isolation"
+  },
+  {
+    "table": "materials",
+    "policy": "materials_tenant_isolation"
+  },
+  {
+    "table": "policy_decisions",
+    "policy": "policy_decisions_tenant_isolation"
+  },
+  {
+    "table": "outbox_messages",
+    "policy": "outbox_messages_tenant_isolation"
+  },
+  {
+    "table": "delivery_receipts",
+    "policy": "delivery_receipts_tenant_isolation"
+  },
+  {
+    "table": "ws_tickets",
+    "policy": "ws_tickets_tenant_isolation"
+  },
+  {
+    "table": "audit_events",
+    "policy": "audit_events_tenant_isolation"
+  },
+  {
+    "table": "tenant_cost_ceilings",
+    "policy": "tenant_cost_ceilings_tenant_isolation"
+  },
+  {
+    "table": "model_invocation_costs",
+    "policy": "model_invocation_costs_tenant_isolation"
+  },
+  {
+    "table": "tenant_manager_contacts",
+    "policy": "tenant_manager_contacts_tenant_isolation"
+  },
+  {
+    "table": "roles",
+    "policy": "roles_tenant_isolation"
+  },
+  {
+    "table": "employee_roles",
+    "policy": "employee_roles_tenant_isolation"
+  },
+  {
+    "table": "refresh_tokens",
+    "policy": "refresh_tokens_tenant_isolation"
+  },
+  {
+    "table": "schema_migrations",
+    "tenant_less": true,
+    "reason": "Migration bookkeeping. It has no tenant dimension and is written only by the migrator role."
+  },
+  {
+    "table": "provider_balance_snapshots",
+    "tenant_less": true,
+    "reason": "Supplier balance readings for the platform's own account (011). The provider is not a tenant and the rows describe no tenant's data."
+  },
+  {
+    "table": "platform_audit_events",
+    "tenant_less": true,
+    "reason": "Audit rows for events that name no single tenant (ADR-0073). Writable only through record_platform_audit_event; the table itself grants the application nothing."
+  },
+  {
+    "table": "tenant_purge_jobs",
+    "policy": "tenant_purge_jobs_tenant_isolation"
+  },
+  {
+    "table": "knowledge_releases",
+    "policy": "knowledge_releases_tenant_isolation"
+  },
+  {
+    "table": "knowledge_chunks",
+    "policy": "knowledge_chunks_tenant_isolation"
+  },
+  {
+    "table": "retrieval_evidence",
+    "policy": "retrieval_evidence_tenant_isolation"
+  },
+  {
+    "table": "knowledge_chunk_identity",
+    "policy": "knowledge_chunk_identity_tenant_isolation"
+  },
+  {
+    "table": "commitments",
+    "policy": "commitments_tenant_isolation"
+  },
+  {
+    "table": "conversation_summaries",
+    "policy": "conversation_summaries_tenant_isolation"
+  }
+]

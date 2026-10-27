@@ -1,0 +1,461 @@
+{
+  "identity": {
+    "profile_id": "synthetic-two-axis-desk",
+    "release_id": "22222222-2222-4222-8222-000100000003",
+    "version": "1.0.3",
+    "content_hash": "e258ebd868989430dd22e6f7ef177be68c4196866be8223d953d93d3f7e12e88"
+  },
+  "target_frames": [
+    {
+      "id": "rental",
+      "goal": "Take an item out on loan and get it back",
+      "exit_conditions": [
+        {
+          "slot": "condition_on_return",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "item_category",
+          "type": "string",
+          "required": true,
+          "description": "Which kind of item the customer wants to borrow."
+        },
+        {
+          "name": "rental_period",
+          "type": "string",
+          "required": true,
+          "description": "How long they want it for, in the customer's own words."
+        },
+        {
+          "name": "deposit_amount",
+          "type": "money",
+          "required": true,
+          "description": "The deposit agreed for this loan."
+        },
+        {
+          "name": "return_date",
+          "type": "date",
+          "required": true,
+          "description": "The date the item is due back."
+        },
+        {
+          "name": "condition_on_return",
+          "type": "string",
+          "required": false,
+          "description": "What condition the item was in when it came back."
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "ask_slot",
+        "advance_goal",
+        "answer_question",
+        "offer_material",
+        "propose_quote",
+        "propose_followup",
+        "confirm_resume",
+        "close_goal",
+        "wait",
+        "handoff"
+      ],
+      "content_materials": [
+        "material:carrier-rental-terms:v1",
+        "material:carrier-deposit-terms:v1",
+        "material:carrier-return-reminder:v1"
+      ],
+      "time_rules": [
+        {
+          "id": "rental-silence_check",
+          "emit_kind": "silence_check",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 90
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal"
+        },
+        {
+          "id": "rental-customer_promise_due",
+          "emit_kind": "customer_promise_due",
+          "due": {
+            "anchor": "commitment_due_at",
+            "offset_seconds": 0
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}:{commitment_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin",
+            "commitment_fulfilled"
+          ],
+          "strategy": "propose_followup"
+        },
+        {
+          "id": "rental-ai_commitment_due",
+          "emit_kind": "ai_commitment_due",
+          "due": {
+            "anchor": "commitment_due_at",
+            "offset_seconds": 0
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}:{commitment_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin",
+            "commitment_fulfilled"
+          ],
+          "strategy": "advance_goal"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "optional"
+      }
+    },
+    {
+      "id": "consultation",
+      "goal": "Scope an advisory request whose price is not knowable yet",
+      "exit_conditions": [
+        {
+          "slot": "assessment_needed",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "inquiry_scope",
+          "type": "string",
+          "required": true,
+          "description": "What the advisory request covers."
+        },
+        {
+          "name": "assessment_needed",
+          "type": "boolean",
+          "required": true,
+          "description": "The request cannot be priced until someone assesses it."
+        },
+        {
+          "name": "quote_authorized",
+          "type": "boolean",
+          "required": false,
+          "description": "The customer agreed to be quoted."
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "ask_slot",
+        "answer_question",
+        "offer_material",
+        "advance_goal",
+        "confirm_resume",
+        "wait",
+        "handoff"
+      ],
+      "content_materials": [
+        "material:carrier-advisory-scope:v1",
+        "material:carrier-assessment-required:v1"
+      ],
+      "time_rules": [
+        {
+          "id": "consultation-silence_check",
+          "emit_kind": "silence_check",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "ask_slot"
+        },
+        {
+          "id": "consultation-goal_stall",
+          "emit_kind": "goal_stall",
+          "due": {
+            "anchor": "frame_entered_at",
+            "offset_seconds": 259200
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "handoff"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "required"
+      }
+    },
+    {
+      "id": "closing",
+      "goal": "Acknowledge the outcome and close",
+      "exit_conditions": [
+        {
+          "slot": "closing_acknowledged",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "closing_acknowledged",
+          "type": "boolean",
+          "required": true,
+          "description": "The customer acknowledged how the loan ended."
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "close_goal",
+        "wait"
+      ],
+      "content_materials": [
+        "material:carrier-closing:v1"
+      ],
+      "time_rules": [],
+      "return_confirmation": {
+        "policy": "forbidden"
+      }
+    }
+  ],
+  "strategies": {
+    "acknowledge": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "no_new_commitment"
+      ]
+    },
+    "ask_slot": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "one_question"
+      ]
+    },
+    "advance_goal": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "current_goal_only"
+      ]
+    },
+    "answer_question": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "evidence_required"
+      ]
+    },
+    "offer_material": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "must_quote_material"
+      ]
+    },
+    "propose_quote": {
+      "required_slots": [
+        "item_category",
+        "rental_period"
+      ],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "pricing_policy_only",
+        "no_new_commitment"
+      ]
+    },
+    "propose_followup": {
+      "required_slots": [
+        "return_date"
+      ],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "no_new_price_promise",
+        "current_goal_only"
+      ]
+    },
+    "confirm_resume": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "no_new_commitment"
+      ]
+    },
+    "close_goal": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "no_new_commitment"
+      ]
+    },
+    "handoff": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "manual_task"
+      ],
+      "generation_constraints": []
+    },
+    "wait": {
+      "required_slots": [],
+      "allowed_intent_kinds": [],
+      "generation_constraints": []
+    },
+    "no_message": {
+      "required_slots": [],
+      "allowed_intent_kinds": [],
+      "generation_constraints": []
+    }
+  },
+  "proactivity_policy": {
+    "active_window_seconds": 1800,
+    "reengagement_limits": {
+      "window_seconds": 86400,
+      "max_delivered": 1
+    },
+    "quiet_hours": {
+      "timezone": "Asia/Shanghai",
+      "ranges": [
+        {
+          "start": "22:30",
+          "end": "08:00"
+        }
+      ]
+    },
+    "exit_signals": [
+      "explicit_opt_out",
+      "complaint",
+      "human_takeover"
+    ],
+    "rhythm_templates": [
+      {
+        "id": "neutral",
+        "max_consecutive": 1
+      }
+    ]
+  },
+  "knowledge_bindings": [
+    "knowledge:carrier-terms:v1"
+  ],
+  "policy_bindings": {
+    "authorization": "policy:authorization:v1",
+    "human_control": "policy:human-control:v1",
+    "pricing": "policy:carrier-fixed-pricing:v1",
+    "commitment_ledger": "policy:carrier-commitments:v1",
+    "escalation": "policy:carrier-escalation:v1",
+    "approved_claims": "policy:carrier-approved-claims:v1"
+  },
+  "outcome_rules": [
+    {
+      "strategy": "propose_quote",
+      "party": "ai",
+      "creates_commitment": "quote_or_calculate",
+      "fulfilment": "same_turn"
+    },
+    {
+      "strategy": "advance_goal",
+      "party": "ai",
+      "creates_commitment": "take_action",
+      "fulfilment": "ai_commitment_due"
+    },
+    {
+      "strategy": "ask_slot",
+      "party": "customer",
+      "creates_commitment": "lookup_or_verify",
+      "fulfilment": "awaiting_customer"
+    },
+    {
+      "strategy": "propose_followup",
+      "party": "customer",
+      "creates_commitment": "take_action",
+      "fulfilment": "customer_promise_due"
+    },
+    {
+      "strategy": "offer_material",
+      "party": "ai",
+      "creates_commitment": "send_material",
+      "fulfilment": "same_turn"
+    },
+    {
+      "strategy": "answer_question",
+      "party": "ai",
+      "creates_commitment": "provide_information",
+      "fulfilment": "same_turn"
+    },
+    {
+      "strategy": "handoff",
+      "party": "ai",
+      "creates_commitment": "contact_or_ask_human",
+      "fulfilment": "awaiting_human"
+    }
+  ],
+  "annotation_taxonomy": [
+    {
+      "label": "rental_requested",
+      "applies_to": "customer_message"
+    },
+    {
+      "label": "advisory_question_raised",
+      "applies_to": "customer_message"
+    },
+    {
+      "label": "price_pressed_before_assessment",
+      "applies_to": "customer_message"
+    },
+    {
+      "label": "return_date_discussed",
+      "applies_to": "customer_message"
+    },
+    {
+      "label": "opt_out",
+      "applies_to": "customer_message"
+    }
+  ],
+  "confidence_gate_policy_ref": "policy:confidence-observe:v1",
+  "manipulation_context_refs": [
+    "context:carrier-pressure-for-a-figure:v1"
+  ],
+  "assist_policy": {
+    "enabled_in_human_mode": false,
+    "allowed_strategy_set": [],
+    "expiry_seconds": 0
+  },
+  "golden_manifest": [
+    "m0-customer-message",
+    "m0-timer-envelope"
+  ],
+  "closing_frame_ref": "closing"
+}

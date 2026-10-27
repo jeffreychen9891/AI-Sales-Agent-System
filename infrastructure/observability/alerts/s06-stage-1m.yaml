@@ -1,0 +1,45 @@
+# S-06 的三条现役告警规则 —— **誊抄自验收记录，不是从账号导出的**。
+#
+# 来源：evidence/m1a/s-06-observability-acceptance-2026-09-02.md（验收通过那份，
+# 含 rule id、folder、evaluation group、interval、pending period 与表达式原文）。
+#
+# **拿它对账，不要拿它直接 provision**：本文件从未被 Grafana 导出或应用过，
+# 账号里若有人改过，这里就是旧的。校对与回写的规矩写在 ../README.md。
+#
+# 演练留痕：三条规则创建时预览均为 Normal；2026-09-02 做过一次可逆真实告警演练
+# （service_healthy 打到 0 → Pending → Firing → 企微 v2-sev-alerts 收到 → 恢复 Normal）。
+
+apiVersion: 1
+source: transcribed-from-acceptance-record # 不是 grafana export
+transcribed_at: 2026-09-02
+transcribed_into_repository_at: 2026-09-07
+
+groups:
+  - folder: FastAgent v2 Stage
+    name: s06-stage-1m
+    interval: 1m
+    pending_period: 1m
+    contact_point: v2-sev-alerts
+    rules:
+      - uid: dfx00orop9s74e
+        title: S-06 Stage service unhealthy
+        expr: >-
+          max((min(fastagent_v2_stage_service_healthy) < bool 1)
+          or absent(fastagent_v2_stage_service_healthy)) > 0
+        # 指标缺失与任一健康分量为 0 都会触发——`absent()` 那一半是刻意的：
+        # 采集停了与服务坏了，对值班的人是同一件事。
+        why: 服务不健康，或指标根本没上来
+
+      - uid: afx00spd9fqbkf
+        title: S-06 Stage backup older than 48h
+        expr: >-
+          max((max(fastagent_v2_stage_backup_freshness_seconds) > bool 172800)
+          or absent(fastagent_v2_stage_backup_freshness_seconds)) > 0
+        why: 最近一次成功备份超过 48 小时，或这个指标没上来
+
+      - uid: efx00vvq03dogd
+        title: S-06 Stage hard-ceiling triggered
+        expr: max(increase(fastagent_v2_stage_hard_ceiling_total[5m])) > 0
+        # ADR-0101 §三.3 原文：**S-06 建在 hard_ceiling 上，不得改名**
+        # （stage_observability.py:122-125）。改这条指标名会静默拆掉这条规则。
+        why: 硬上限被触发过，哪怕一次

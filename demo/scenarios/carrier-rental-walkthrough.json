@@ -1,0 +1,330 @@
+{
+  "scenario_id": "carrier-rental-walkthrough",
+  "title": "租赁：槽位逐轮填满 → 一次静默 → 客户确认",
+  "provenance": "合成语料，不是录制件。四步文档由本仓作者按 packages/contracts/inference/*.schema.json 的模型侧形状手写，并由 tests/contracts/test_scripted_inference.py 驱动真实的 validate_plan / validate_generation against profiles/synthetic-carrier (synthetic-two-axis-desk 1.0.3) 证明可执行。对话内容与任何真实客户无关；真实生产语料没有进这个仓。",
+  "profile": {
+    "profile_id": "synthetic-two-axis-desk",
+    "version": "1.0.3",
+    "frame": "rental",
+    "note": "每一轮的 selected_strategy_id 必须在这个帧的 allowed_strategy_set 里，generation_constraints 必须逐字等于该策略在配包里的声明。第 3 轮是 silence_check 定时器轮次，而 rental 帧的那条 TimeRule 声明 strategy=advance_goal —— 所以那一轮录的必须是 advance_goal，否则 ScriptedInference.plan 会当场拒（它不等校验器把它拒成安全阀）。"
+  },
+  "turns": [
+    {
+      "ordinal": 1,
+      "label": "客户问能不能租投影仪 —— 期限未知，问一句",
+      "steps": {
+        "understand": {
+          "facts": [
+            { "key": "inbound_names_an_item", "typed_value": true, "confidence": 0.95 }
+          ],
+          "intents": [{ "intent_label": "rental_inquiry", "confidence": 0.91 }],
+          "slot_updates": [
+            { "slot": "item_category", "value": "便携投影仪", "confidence": 0.88 }
+          ],
+          "interruption": { "relation": "same_goal", "suggested_frame_definition_id": null },
+          "sentiment": "neutral",
+          "risk_markers": ["none"],
+          "customer_commitments": [],
+          "uncertainties": [
+            { "field": "rental_period", "reason": "他没有说要用多久" }
+          ],
+          "turn_summary": "客户想租一台便携投影仪，还没说用多久。"
+        },
+        "plan": {
+          "target_stack_operation": { "op": "keep", "target_frame_definition_id": null },
+          "selected_strategy_id": "ask_slot",
+          "strategy_reason_code": "RENTAL_PERIOD_NOT_KNOWN",
+          "confidence": {
+            "raw_score": 0.86,
+            "calibrated_score": null,
+            "assessment_version": "scenario-v1",
+            "factor_codes": ["evidence_complete"]
+          },
+          "required_slot_requests": ["rental_period"],
+          "scheduled_event_changes": { "create": [], "cancel": [], "reschedule": [] },
+          "candidate_intents": [
+            {
+              "kind": "send_message",
+              "typed_payload": {},
+              "idempotency_basis": "scripted-reply"
+            }
+          ],
+          "generation_constraints": ["one_question"],
+          "manual_review_reason": null
+        },
+        "generate": {
+          "strategy_id": "ask_slot",
+          "customer_visible_segments": [
+            {
+              "type": "text",
+              "content_or_ref": "便携投影仪有现货，按天计租，押金在归还验机后退。你大概要用几天？"
+            }
+          ],
+          "proposed_intents": [
+            {
+              "kind": "send_message",
+              "typed_payload": {
+                "content": {
+                  "type": "text",
+                  "text": "便携投影仪有现货，按天计租，押金在归还验机后退。你大概要用几天？"
+                }
+              },
+              "evidence_refs": []
+            }
+          ],
+          "confidence": {
+            "raw_score": 0.86,
+            "calibrated_score": null,
+            "assessment_version": "scenario-v1",
+            "factor_codes": ["evidence_complete"]
+          },
+          "claims": [],
+          "return_confirmation": { "included": false, "tone_material_ref": null },
+          "safety_markers": ["none"]
+        },
+        "usage": {
+          "understand": { "input_tokens": 3412, "output_tokens": 196, "latency_ms": 1840 },
+          "plan": { "input_tokens": 4188, "output_tokens": 241, "latency_ms": 2010 },
+          "generate": { "input_tokens": 3960, "output_tokens": 88, "latency_ms": 1120 }
+        }
+      }
+    },
+    {
+      "ordinal": 2,
+      "label": "客户给了期限和归还日 —— 两个槽位一起填上，往目标推进",
+      "steps": {
+        "understand": {
+          "facts": [
+            { "key": "inbound_names_a_duration", "typed_value": true, "confidence": 0.93 }
+          ],
+          "intents": [{ "intent_label": "provide_slot_value", "confidence": 0.94 }],
+          "slot_updates": [
+            { "slot": "rental_period", "value": "3 天", "confidence": 0.92 },
+            { "slot": "return_date", "value": "2026-11-02", "confidence": 0.81 }
+          ],
+          "interruption": { "relation": "same_goal", "suggested_frame_definition_id": null },
+          "sentiment": "neutral",
+          "risk_markers": ["none"],
+          "customer_commitments": [],
+          "uncertainties": [],
+          "turn_summary": "客户说租三天，打算下周一归还。"
+        },
+        "plan": {
+          "target_stack_operation": { "op": "keep", "target_frame_definition_id": null },
+          "selected_strategy_id": "advance_goal",
+          "strategy_reason_code": "PERIOD_AND_RETURN_DATE_KNOWN",
+          "confidence": {
+            "raw_score": 0.9,
+            "calibrated_score": null,
+            "assessment_version": "scenario-v1",
+            "factor_codes": ["evidence_complete"]
+          },
+          "required_slot_requests": [],
+          "scheduled_event_changes": { "create": [], "cancel": [], "reschedule": [] },
+          "candidate_intents": [
+            {
+              "kind": "send_message",
+              "typed_payload": {},
+              "idempotency_basis": "scripted-reply"
+            }
+          ],
+          "generation_constraints": ["current_goal_only"],
+          "manual_review_reason": null
+        },
+        "generate": {
+          "strategy_id": "advance_goal",
+          "customer_visible_segments": [
+            {
+              "type": "text",
+              "content_or_ref": "三天、下周一还，记下了。接下来把取机时间定一下，确认后这台就留给你。"
+            }
+          ],
+          "proposed_intents": [
+            {
+              "kind": "send_message",
+              "typed_payload": {
+                "content": {
+                  "type": "text",
+                  "text": "三天、下周一还，记下了。接下来把取机时间定一下，确认后这台就留给你。"
+                }
+              },
+              "evidence_refs": []
+            }
+          ],
+          "confidence": {
+            "raw_score": 0.9,
+            "calibrated_score": null,
+            "assessment_version": "scenario-v1",
+            "factor_codes": ["evidence_complete"]
+          },
+          "claims": [],
+          "return_confirmation": { "included": false, "tone_material_ref": null },
+          "safety_markers": ["none"]
+        },
+        "usage": {
+          "understand": { "input_tokens": 3688, "output_tokens": 224, "latency_ms": 1760 },
+          "plan": { "input_tokens": 4402, "output_tokens": 210, "latency_ms": 1930 },
+          "generate": { "input_tokens": 4120, "output_tokens": 96, "latency_ms": 1180 }
+        }
+      }
+    },
+    {
+      "ordinal": 3,
+      "label": "90 秒没回音 —— 第四步先读这次静默，再决定做什么",
+      "steps": {
+        "read_silence": {
+          "reading": "他上一条回得很快，这一条停了 90 秒；大概是在和同事确认取机时间，而不是不想租了。此刻重复报一遍条款没有用。",
+          "action": {
+            "do": "ask_again",
+            "material_ref": null,
+            "because": "把取机时间这一个问题换个问法再问一次，目标仍是把这台机子借出去。"
+          }
+        },
+        "understand": {
+          "facts": [],
+          "intents": [],
+          "slot_updates": [],
+          "interruption": { "relation": "same_goal", "suggested_frame_definition_id": null },
+          "sentiment": "unknown",
+          "risk_markers": ["none"],
+          "customer_commitments": [],
+          "uncertainties": [
+            { "field": "pickup_time", "reason": "这一轮客户没有新消息，取机时间仍未定" }
+          ],
+          "turn_summary": "客户这一轮没有新消息。"
+        },
+        "plan": {
+          "target_stack_operation": { "op": "keep", "target_frame_definition_id": null },
+          "selected_strategy_id": "advance_goal",
+          "strategy_reason_code": "SILENCE_READ_AS_INTERNAL_CHECK",
+          "confidence": {
+            "raw_score": 0.64,
+            "calibrated_score": null,
+            "assessment_version": "scenario-v1",
+            "factor_codes": ["low_signal_input"]
+          },
+          "required_slot_requests": [],
+          "scheduled_event_changes": { "create": [], "cancel": [], "reschedule": [] },
+          "candidate_intents": [
+            {
+              "kind": "send_message",
+              "typed_payload": {},
+              "idempotency_basis": "scripted-reply"
+            }
+          ],
+          "generation_constraints": ["current_goal_only"],
+          "manual_review_reason": null
+        },
+        "generate": {
+          "strategy_id": "advance_goal",
+          "customer_visible_segments": [
+            {
+              "type": "text",
+              "content_or_ref": "不急，你定好取机时间告我一声就行，这台先给你留着。"
+            }
+          ],
+          "proposed_intents": [
+            {
+              "kind": "send_message",
+              "typed_payload": {
+                "content": {
+                  "type": "text",
+                  "text": "不急，你定好取机时间告我一声就行，这台先给你留着。"
+                }
+              },
+              "evidence_refs": []
+            }
+          ],
+          "confidence": {
+            "raw_score": 0.64,
+            "calibrated_score": null,
+            "assessment_version": "scenario-v1",
+            "factor_codes": ["low_signal_input"]
+          },
+          "claims": [],
+          "return_confirmation": { "included": false, "tone_material_ref": null },
+          "safety_markers": ["none"]
+        },
+        "usage": {
+          "read_silence": { "input_tokens": 3510, "output_tokens": 168, "latency_ms": 1610 },
+          "understand": { "input_tokens": 3502, "output_tokens": 142, "latency_ms": 1440 },
+          "plan": { "input_tokens": 4530, "output_tokens": 198, "latency_ms": 1880 },
+          "generate": { "input_tokens": 4060, "output_tokens": 74, "latency_ms": 1040 }
+        }
+      }
+    },
+    {
+      "ordinal": 4,
+      "label": "客户确认 —— 应答收口，不许在这一轮新许承诺",
+      "steps": {
+        "understand": {
+          "facts": [
+            { "key": "inbound_is_an_agreement", "typed_value": true, "confidence": 0.9 }
+          ],
+          "intents": [{ "intent_label": "confirmation", "confidence": 0.93 }],
+          "slot_updates": [],
+          "interruption": { "relation": "same_goal", "suggested_frame_definition_id": null },
+          "sentiment": "positive",
+          "risk_markers": ["none"],
+          "customer_commitments": [],
+          "uncertainties": [],
+          "turn_summary": "客户同意按这个方案走。"
+        },
+        "plan": {
+          "target_stack_operation": { "op": "keep", "target_frame_definition_id": null },
+          "selected_strategy_id": "acknowledge",
+          "strategy_reason_code": "CUSTOMER_AGREED",
+          "confidence": {
+            "raw_score": 0.93,
+            "calibrated_score": null,
+            "assessment_version": "scenario-v1",
+            "factor_codes": ["evidence_complete"]
+          },
+          "required_slot_requests": [],
+          "scheduled_event_changes": { "create": [], "cancel": [], "reschedule": [] },
+          "candidate_intents": [
+            {
+              "kind": "send_message",
+              "typed_payload": {},
+              "idempotency_basis": "scripted-reply"
+            }
+          ],
+          "generation_constraints": ["no_new_commitment"],
+          "manual_review_reason": null
+        },
+        "generate": {
+          "strategy_id": "acknowledge",
+          "customer_visible_segments": [
+            {
+              "type": "text",
+              "content_or_ref": "好，收到。"
+            }
+          ],
+          "proposed_intents": [
+            {
+              "kind": "send_message",
+              "typed_payload": {
+                "content": { "type": "text", "text": "好，收到。" }
+              },
+              "evidence_refs": []
+            }
+          ],
+          "confidence": {
+            "raw_score": 0.93,
+            "calibrated_score": null,
+            "assessment_version": "scenario-v1",
+            "factor_codes": ["evidence_complete"]
+          },
+          "claims": [],
+          "return_confirmation": { "included": false, "tone_material_ref": null },
+          "safety_markers": ["none"]
+        },
+        "usage": {
+          "understand": { "input_tokens": 3744, "output_tokens": 158, "latency_ms": 1520 },
+          "plan": { "input_tokens": 4610, "output_tokens": 186, "latency_ms": 1800 },
+          "generate": { "input_tokens": 4180, "output_tokens": 42, "latency_ms": 860 }
+        }
+      }
+    }
+  ]
+}

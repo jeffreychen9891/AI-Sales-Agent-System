@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/control-plane/resource-ref.schema.json",
+  "title": "ResourceRef",
+  "description": "control-plane-parity.md 5.1. `tenant_id` comes from the authorization context; a client-supplied tenant may only be matched against it, never trusted as the value. JSON Schema cannot express where a value came from, so that half is enforced in runtime/control_plane.py::resource_ref.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "resource_type",
+    "resource_id",
+    "tenant_id"
+  ],
+  "properties": {
+    "resource_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resource_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "The owning tenant, or null for a platform resource that belongs to no tenant (ADR-0070 §三). Still required: parity §5.1 makes tenant_id unconditional, so an absent key would be indistinguishable from a sender that forgot it, while null is an answer."
+    }
+  }
+}

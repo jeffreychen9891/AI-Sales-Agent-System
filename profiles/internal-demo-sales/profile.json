@@ -1,0 +1,1214 @@
+{
+  "identity": {
+    "profile_id": "internal-demo-sales",
+    "release_id": "88888888-8888-4888-8888-000100040012",
+    "version": "1.4.12",
+    "content_hash": "48c1fc39c2d53e569df0bb0e837aede2181dd0c835c8bcb049f1fcf9b123aea8"
+  },
+  "target_frames": [
+    {
+      "id": "introduce",
+      "goal": "【给计划步】对面是其他部门的负责人。\n⚠️ **默认姿态：你在讲，他在听。** 销售场景里客户绝大多数时候是一个**有可能随时提问的听众** —— 他不出声是常态，不是信号。**所以每一轮都往前走一步，不要停下来等他回应。**他插话就先答他（该 `push` 的 push），答完**回到你自己这条线上接着讲**。\n**这条线怎么走**（讲到哪儿记进 `material_delivered`）：\n1. 第一句就说清我们做什么、能解决他什么——引 `material:demo-open-what-we-do:v1` 原文；\n2. 讲对应的能力——引 `material:demo-bridge-to-capability:v1`。顺带问一句他团队现在怎么处理（记进 current_handling），**问完这一轮就往下讲，他答不答都不等**；\n3. 两段都讲完了 → 记上 `material_delivered`，**平台会自己带你去报价**（见下）。\n**`usage_intent` 是你对他的判断**（认可 / 保留 / 不认可）——从他说过的话、问过的问题里读出来，**他没明说也要填**。它是这一帧走完的标志：有了判断，这一帧才算做完。\n**⚠️ 这一帧没有价格/疑虑/试用素材** —— 都在各自的帧里。\n· **报价和推成交你不用管，平台会自己把你带过去**：两段讲完就进报价帧，报过价就进推成交帧。**你只管把这一段讲完、把 `material_delivered` 记上。**⚠️ 在这一帧报价会引不到那几段原文，整份提案会被拒，**他一个字都收不到**——他问钱也先把这一段讲完，平台就带你过去。\n· **疑虑那一帧要你自己提** —— 他提出疑虑、拿我们跟别的东西比、问数据放哪、问能不能替代人 → **这一轮就 `push` objection**。它和上面两个不一样：**他可能提好几条，每一条都要再进一次**，所以平台不替你做这个决定。\n疑虑他没提就不要主动提。**跟着他的关注点走**：他更在意哪件就讲哪件，不必把当前这件讲完才换（有人不在意价格，更想知道功能）。**`pending_question` 挂着的问题别再问**——他答了（answer_evidence 非空）就用答案往下走，没答就换条路推进；「我们问过什么」以它为准，摘要只记他那侧。`last_outbound` 是你上一轮的原话：里面有「我说说…」「我发您…」这类许诺就**先兑现**。**不必一问一答**，兑现完可以紧跟一句把话说完。**不要重复对方的话，也不要把他答的先复述一遍再接话**——把答案直接用进你下一句要说的事里，接上就走。铺垫、共情、点评可以有，但**说人话别端着**。**他提了问题或抱怨就回答它**——回执式短句（说自己收到了、记下了、会安排的那类）不是答案，**看懂了不用说出来**；答不上来就说不知道。**你的待办不是话题**：还缺哪个槽、还没定几件、打算问什么，都是你自己的清单，一个字也别对他说——缺哪件就直接问那件。槽位见 `slots_wanted`，每个都带一句它是什么意思。concern_topic 只填 slots_wanted 的 allowed_values 之一，**只填当前这一类**，拼几类会被整条丢弃。「是不是要裁人」归「能省几个人」。",
+      "exit_conditions": [
+        {
+          "slot": "material_delivered",
+          "present": true
+        },
+        {
+          "slot": "usage_intent",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "material_delivered",
+          "type": "string",
+          "required": true,
+          "description": "已经讲过哪几段：开场那段 / 讲能力那段。"
+        },
+        {
+          "name": "usage_intent",
+          "type": "string",
+          "required": true,
+          "description": "你判断他的态度：认可 / 保留 / 不认可。他没明说也照你的判断填。"
+        },
+        {
+          "name": "concern_topic",
+          "type": "string",
+          "required": false,
+          "description": "他在意哪一类损耗，用他自己的话。他没说就空着。"
+        },
+        {
+          "name": "current_handling",
+          "type": "string",
+          "required": false,
+          "description": "他团队现在怎么处理客户消息。他没答就空着。"
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "ask_slot",
+        "advance_goal",
+        "answer_question",
+        "confirm_resume",
+        "wait"
+      ],
+      "time_rule_strategy_set": [
+        "advance_goal",
+        "propose_followup"
+      ],
+      "content_materials": [
+        {
+          "ref": "material:demo-open-what-we-do:v1",
+          "availability": "any",
+          "stages": [
+            "01-开场"
+          ]
+        },
+        {
+          "ref": "material:demo-bridge-to-capability:v1",
+          "availability": "any",
+          "stages": [
+            "02-摸底"
+          ]
+        }
+      ],
+      "time_rules": [
+        {
+          "id": "introduce-silence_check",
+          "emit_kind": "silence_check",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 90
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal"
+        },
+        {
+          "id": "introduce-goal_stall",
+          "emit_kind": "goal_stall",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal",
+          "when": {
+            "pending_slot": "usage_intent"
+          }
+        },
+        {
+          "id": "introduce-followup_due",
+          "emit_kind": "followup_due",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 900
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "usage_intent"
+          }
+        },
+        {
+          "id": "introduce-dormant_reengagement",
+          "emit_kind": "dormant_reengagement",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 5400
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "usage_intent"
+          }
+        },
+        {
+          "id": "introduce-customer_promise_due",
+          "emit_kind": "customer_promise_due",
+          "due": {
+            "anchor": "commitment_due_at",
+            "offset_seconds": 0
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}:{commitment_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin",
+            "commitment_fulfilled"
+          ],
+          "strategy": "propose_followup"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "optional"
+      },
+      "material_stages": [
+        {
+          "name": "01-开场",
+          "after": []
+        },
+        {
+          "name": "02-摸底",
+          "after": [
+            "material:demo-open-what-we-do:v1"
+          ]
+        }
+      ],
+      "content_assets": [],
+      "advance_when": [
+        {
+          "delivered": "material:demo-bridge-to-capability:v1",
+          "push": "quote"
+        }
+      ],
+      "revisit": "brief_answer"
+    },
+    {
+      "id": "quote",
+      "goal": "【给计划步】他问钱了。**先给价格，再补口径**——引 `material:demo-price-plain:v1` 原文，然后用自己的话说清这个数是怎么算的。**清单里没有它，就看 `price_quoted`**：有值就照那个数说；**两边都没有就别报价**，说这一轮取不到、下一句补上。**不许凭印象说数字，也不许用「这个数」「刚才那个价格」指一个还没说出口的数。**他问的是他要付多少，不是价目体系。**报价是你的事**：他问价你就报数，**不要把报价这件事反过来推给他**。\n报价表 `asset:pricing-sheet:v1` **每要一次发一次**；他说「发一份」「能不能看看」就提一个 `send_material`。问怎么付款引 `material:demo-payment-how:v1`。\n价格说清、他也回了话（认可 / 嫌贵 / 要再看看，都算），**这一帧就完了** —— `complete`，回到主线。**不要在这一帧继续聊别的**。\n要资料就发：他说「发一份」「能不能看看」就提一个 `send_material`，ref 取 `content_assets`。\n**不要重复对方的话，也不要把他答的先复述一遍再接话**；回执式短句（说自己收到了、记下了、会安排的那类）不是答案，**看懂了不用说出来**；答不上来就说不知道。铺垫、共情、点评可以有，但说人话别端着。",
+      "exit_conditions": [
+        {
+          "slot": "price_quoted",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "price_quoted",
+          "type": "string",
+          "required": true,
+          "description": "已经报过的那个数与口径，比如「按人头 199/月，含全部功能」。",
+          "on_revisit": "carry",
+          "filled_by_delivery": "material:demo-price-plain:v1"
+        },
+        {
+          "name": "price_feedback",
+          "type": "string",
+          "required": false,
+          "description": "他对价格的反应：认可 / 嫌贵 / 要再比比 / 没表态。"
+        },
+        {
+          "name": "concern_topic",
+          "type": "string",
+          "required": false,
+          "description": "他这一问属于哪一类，用来挑对得上的原文。"
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "answer_question",
+        "advance_goal",
+        "offer_material",
+        "confirm_resume",
+        "close_goal",
+        "wait"
+      ],
+      "time_rule_strategy_set": [
+        "advance_goal",
+        "propose_followup"
+      ],
+      "content_materials": [
+        {
+          "ref": "material:demo-price-plain:v1",
+          "availability": "on_request",
+          "topics": [
+            "花钱"
+          ]
+        },
+        {
+          "ref": "material:demo-price-flat:v1",
+          "availability": "on_request",
+          "topics": [
+            "花钱"
+          ]
+        },
+        {
+          "ref": "material:demo-price-metered-cost:v1",
+          "availability": "on_request",
+          "topics": [
+            "花钱"
+          ]
+        },
+        {
+          "ref": "material:demo-payment-how:v1",
+          "availability": "on_request",
+          "topics": [
+            "怎么付款"
+          ]
+        }
+      ],
+      "content_assets": [
+        {
+          "ref": "asset:pricing-sheet:v1",
+          "availability": "on_request",
+          "topics": [
+            "花钱"
+          ]
+        },
+        {
+          "ref": "asset:entry-plan-options:v1",
+          "availability": "on_request",
+          "topics": [
+            "花钱"
+          ]
+        }
+      ],
+      "time_rules": [
+        {
+          "id": "quote-silence_check",
+          "emit_kind": "silence_check",
+          "due": {
+            "anchor": "frame_entered_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal"
+        },
+        {
+          "id": "quote-goal_stall",
+          "emit_kind": "goal_stall",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal",
+          "when": {
+            "pending_slot": "price_quoted"
+          }
+        },
+        {
+          "id": "quote-followup_due",
+          "emit_kind": "followup_due",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 900
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "price_feedback"
+          }
+        },
+        {
+          "id": "quote-dormant_reengagement",
+          "emit_kind": "dormant_reengagement",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 5400
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "price_feedback"
+          }
+        },
+        {
+          "id": "quote-customer_promise_due",
+          "emit_kind": "customer_promise_due",
+          "due": {
+            "anchor": "commitment_due_at",
+            "offset_seconds": 0
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}:{commitment_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin",
+            "commitment_fulfilled"
+          ],
+          "strategy": "propose_followup"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "optional"
+      },
+      "material_topic_slot": "concern_topic",
+      "material_topic_concurrency": 3,
+      "advance_when": [
+        {
+          "delivered": "material:demo-price-plain:v1",
+          "push": "trial_close"
+        }
+      ],
+      "revisit": "reenter"
+    },
+    {
+      "id": "objection",
+      "goal": "【给计划步】他提疑虑了。**把他这一条记进 `raised_concern`**（用他自己的话），属于哪一类记进 `concern_topic`。**正面回答他提的那一条**，不要绕，也不要先讲别的。清单里有对得上的原文就引；**答不上来就说不知道**，回执式短句（说自己记下了、会安排的那类）不是回答。\n常见几类与对应原文：能不能替代人 → `material:demo-limit-replace-no:v1`；会不会瞎答应 → `material:demo-promise-gate:v1`；找真人怎么办 → `material:demo-human-takeover:v1`；数据放哪 → `material:demo-data-where:v1`；我们这行能不能用 → `material:demo-industry-config:v1`；和以前那个有什么不一样 → `material:demo-vs-previous:v1`。\n**一次只答一条**。**答完就记 `concern_answered`，这一帧就完了** —— `complete`，回到主线。⚠️ **不要等他说「明白了」**：听懂的人多半不吭声，等下去就是把一次主动的机会耗在这儿。他真说了就顺手记进 `concern_resolved`。他又提新的一条，回到主线之后再 `push` 一次这个帧。\n要资料就发：他说「发一份」「能不能看看」就提一个 `send_material`，ref 取 `content_assets`。",
+      "exit_conditions": [
+        {
+          "slot": "concern_answered",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "concern_answered",
+          "type": "boolean",
+          "required": true,
+          "description": "他提的那一条，我们已经正面回答过了（或者明说了不知道）。"
+        },
+        {
+          "name": "raised_concern",
+          "type": "string",
+          "required": false,
+          "description": "他这次提出来的那一条疑虑，用他自己的话。"
+        },
+        {
+          "name": "concern_topic",
+          "type": "string",
+          "required": false,
+          "description": "这条疑虑属于哪一类，用来挑对得上的原文。"
+        },
+        {
+          "name": "concern_resolved",
+          "type": "boolean",
+          "required": false,
+          "description": "他明确表示这一条听明白了。他不说是常态。"
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "answer_question",
+        "advance_goal",
+        "offer_material",
+        "confirm_resume",
+        "close_goal",
+        "wait"
+      ],
+      "time_rule_strategy_set": [
+        "advance_goal",
+        "propose_followup"
+      ],
+      "content_materials": [
+        {
+          "ref": "material:demo-limit-replace-no:v1",
+          "availability": "on_request",
+          "topics": [
+            "能省几个人"
+          ]
+        },
+        {
+          "ref": "material:demo-limit-metrics-none:v1",
+          "availability": "on_request",
+          "topics": [
+            "能省几个人"
+          ]
+        },
+        {
+          "ref": "material:demo-limit-not-a-salesperson:v1",
+          "availability": "on_request",
+          "topics": [
+            "能省几个人",
+            "团队的损耗"
+          ]
+        },
+        {
+          "ref": "material:demo-promise-gate:v1",
+          "availability": "on_request",
+          "topics": [
+            "瞎答应"
+          ]
+        },
+        {
+          "ref": "material:demo-promise-gate-limit:v1",
+          "availability": "on_request",
+          "topics": [
+            "瞎答应"
+          ]
+        },
+        {
+          "ref": "material:demo-human-takeover:v1",
+          "availability": "on_request",
+          "topics": [
+            "找真人"
+          ]
+        },
+        {
+          "ref": "material:demo-human-not-self-escalate:v1",
+          "availability": "on_request",
+          "topics": [
+            "找真人"
+          ]
+        },
+        {
+          "ref": "material:demo-audit-what:v1",
+          "availability": "on_request",
+          "topics": [
+            "查问题"
+          ]
+        },
+        {
+          "ref": "material:demo-audit-boundary:v1",
+          "availability": "on_request",
+          "topics": [
+            "查问题"
+          ]
+        },
+        {
+          "ref": "material:demo-data-where:v1",
+          "availability": "on_request",
+          "topics": [
+            "数据安全"
+          ]
+        },
+        {
+          "ref": "material:demo-data-delete:v1",
+          "availability": "on_request",
+          "topics": [
+            "数据安全"
+          ]
+        },
+        {
+          "ref": "material:demo-industry-config:v1",
+          "availability": "on_request",
+          "topics": [
+            "我们这行能不能用"
+          ]
+        },
+        {
+          "ref": "material:demo-vs-previous:v1",
+          "availability": "on_request",
+          "topics": [
+            "和以前那个有什么不一样"
+          ]
+        }
+      ],
+      "content_assets": [
+        {
+          "ref": "asset:headcount-impact-onepager:v1",
+          "availability": "on_request",
+          "topics": [
+            "能省几个人",
+            "团队的损耗"
+          ]
+        },
+        {
+          "ref": "asset:peer-case-study:v1",
+          "availability": "on_request",
+          "topics": [
+            "我们这行能不能用",
+            "和以前那个有什么不一样"
+          ]
+        },
+        {
+          "ref": "asset:commitment-guardrails:v1",
+          "availability": "on_request",
+          "topics": [
+            "瞎答应"
+          ]
+        },
+        {
+          "ref": "asset:human-handoff-sla:v1",
+          "availability": "on_request",
+          "topics": [
+            "找真人"
+          ]
+        },
+        {
+          "ref": "asset:handoff-flow-diagram:v1",
+          "availability": "on_request",
+          "topics": [
+            "找真人"
+          ]
+        },
+        {
+          "ref": "asset:conversation-audit-trail:v1",
+          "availability": "on_request",
+          "topics": [
+            "查问题"
+          ]
+        }
+      ],
+      "material_topic_slot": "concern_topic",
+      "material_topic_concurrency": 3,
+      "time_rules": [
+        {
+          "id": "objection-silence_check",
+          "emit_kind": "silence_check",
+          "due": {
+            "anchor": "frame_entered_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal"
+        },
+        {
+          "id": "objection-goal_stall",
+          "emit_kind": "goal_stall",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal",
+          "when": {
+            "pending_slot": "concern_answered"
+          }
+        },
+        {
+          "id": "objection-followup_due",
+          "emit_kind": "followup_due",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 900
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "concern_resolved"
+          }
+        },
+        {
+          "id": "objection-dormant_reengagement",
+          "emit_kind": "dormant_reengagement",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 5400
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "concern_resolved"
+          }
+        },
+        {
+          "id": "objection-customer_promise_due",
+          "emit_kind": "customer_promise_due",
+          "due": {
+            "anchor": "commitment_due_at",
+            "offset_seconds": 0
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}:{commitment_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin",
+            "commitment_fulfilled"
+          ],
+          "strategy": "propose_followup"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "optional"
+      },
+      "revisit": "reenter"
+    },
+    {
+      "id": "trial_close",
+      "goal": "【给计划步】他认可了。**推一次成交，只推一次**：讲 `material:demo-trial-how:v1`（试用怎么开始），然后**直接问「现在就开吗」**。\n他问要准备什么 → `material:demo-onboarding-what-we-need:v1`；问多久能上 → `material:demo-timeline-to-live:v1`；要开通材料 → `asset:trial-setup-guide:v1`。\n**推过一次就不要再推第二次**（`trial_offered` 已填就是推过了）。他给了答复——开 / 再想想 / 不开，**都算答复**——记进 decision，**这一帧就完了** —— `complete`，回到主线。他说「再想想」也不要追着劝，那一句记下来就行。\n要资料就发：他说「发一份」「能不能看看」就提一个 `send_material`，ref 取 `content_assets`。\n**不要重复对方的话，也不要把他答的先复述一遍再接话**；回执式短句（说自己收到了、记下了、会安排的那类）不是答案，**看懂了不用说出来**；答不上来就说不知道。铺垫、共情、点评可以有，但说人话别端着。",
+      "exit_conditions": [
+        {
+          "slot": "trial_offered",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "trial_offered",
+          "type": "boolean",
+          "required": true,
+          "description": "已经推过一次试用：讲过怎么开始，也问过是否现在就开。"
+        },
+        {
+          "name": "decision",
+          "type": "string",
+          "required": false,
+          "description": "他的答复：现在就开 / 再想想 / 不开。"
+        },
+        {
+          "name": "concern_topic",
+          "type": "string",
+          "required": false,
+          "description": "他这一问属于哪一类，用来挑对得上的原文。"
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "answer_question",
+        "advance_goal",
+        "offer_material",
+        "confirm_resume",
+        "close_goal",
+        "wait"
+      ],
+      "time_rule_strategy_set": [
+        "advance_goal",
+        "propose_followup"
+      ],
+      "content_materials": [
+        {
+          "ref": "material:demo-trial-how:v1",
+          "availability": "any",
+          "stages": [
+            "03-试用"
+          ]
+        },
+        {
+          "ref": "material:demo-landing-next:v1",
+          "availability": "any",
+          "stages": [
+            "05-收口"
+          ]
+        },
+        {
+          "ref": "material:demo-onboarding-what-we-need:v1",
+          "availability": "on_request",
+          "topics": [
+            "怎么开通"
+          ]
+        },
+        {
+          "ref": "material:demo-onboarding-what-we-do:v1",
+          "availability": "any",
+          "stages": [
+            "04-落地"
+          ]
+        },
+        {
+          "ref": "material:demo-timeline-to-live:v1",
+          "availability": "on_request",
+          "topics": [
+            "多久能上",
+            "怎么开通"
+          ]
+        }
+      ],
+      "content_assets": [
+        {
+          "ref": "asset:trial-setup-guide:v1",
+          "availability": "on_request",
+          "topics": [
+            "怎么开通"
+          ]
+        },
+        {
+          "ref": "asset:product-demo-video:v1",
+          "availability": "proactive",
+          "stages": [
+            "03-试用"
+          ]
+        },
+        {
+          "ref": "asset:onboarding-implementation-checklist:v1",
+          "availability": "proactive",
+          "stages": [
+            "04-落地"
+          ]
+        },
+        {
+          "ref": "asset:followup-recap-onepager:v1",
+          "availability": "timer",
+          "emit_kinds": [
+            "followup_due"
+          ]
+        }
+      ],
+      "material_stages": [
+        {
+          "name": "03-试用",
+          "after": []
+        },
+        {
+          "name": "04-落地",
+          "after": [
+            "material:demo-trial-how:v1"
+          ]
+        },
+        {
+          "name": "05-收口",
+          "after": [
+            "material:demo-onboarding-what-we-do:v1"
+          ]
+        }
+      ],
+      "time_rules": [
+        {
+          "id": "trial_close-silence_check",
+          "emit_kind": "silence_check",
+          "due": {
+            "anchor": "frame_entered_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal"
+        },
+        {
+          "id": "trial_close-goal_stall",
+          "emit_kind": "goal_stall",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal",
+          "when": {
+            "pending_slot": "trial_offered"
+          }
+        },
+        {
+          "id": "trial_close-followup_due",
+          "emit_kind": "followup_due",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 900
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "decision"
+          }
+        },
+        {
+          "id": "trial_close-dormant_reengagement",
+          "emit_kind": "dormant_reengagement",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 5400
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "decision"
+          }
+        },
+        {
+          "id": "trial_close-customer_promise_due",
+          "emit_kind": "customer_promise_due",
+          "due": {
+            "anchor": "commitment_due_at",
+            "offset_seconds": 0
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}:{commitment_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin",
+            "commitment_fulfilled"
+          ],
+          "strategy": "propose_followup"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "optional"
+      },
+      "material_topic_slot": "concern_topic",
+      "material_topic_concurrency": 3,
+      "revisit": "brief_answer"
+    },
+    {
+      "id": "closing",
+      "goal": "对方已经表示够了。收个尾，谢一句，别再推。",
+      "exit_conditions": [
+        {
+          "slot": "closing_acknowledged",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "closing_acknowledged",
+          "type": "boolean",
+          "required": false,
+          "description": "他认了这次收尾：道谢、说好、或不再追问。"
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "close_goal",
+        "wait"
+      ],
+      "content_materials": [
+        {
+          "ref": "material:demo-func-close-negative:v1",
+          "availability": "on_request"
+        },
+        {
+          "ref": "material:demo-func-close-plain:v1",
+          "availability": "on_request"
+        },
+        {
+          "ref": "material:demo-func-close-thanks:v1",
+          "availability": "on_request"
+        },
+        {
+          "ref": "material:demo-func-close-warm:v1",
+          "availability": "on_request"
+        },
+        {
+          "ref": "material:demo-func-close-with-number:v1",
+          "availability": "on_request"
+        }
+      ],
+      "time_rules": [
+        {
+          "id": "closing-silence_check",
+          "emit_kind": "silence_check",
+          "due": {
+            "anchor": "frame_entered_at",
+            "offset_seconds": 120
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "close_goal"
+        },
+        {
+          "id": "closing-goal_stall",
+          "emit_kind": "goal_stall",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 300
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "closing_acknowledged"
+          }
+        },
+        {
+          "id": "closing-followup_due",
+          "emit_kind": "followup_due",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 1800
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "closing_acknowledged"
+          }
+        },
+        {
+          "id": "closing-dormant_reengagement",
+          "emit_kind": "dormant_reengagement",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 7200
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup",
+          "when": {
+            "pending_slot": "closing_acknowledged"
+          }
+        },
+        {
+          "id": "closing-customer_promise_due",
+          "emit_kind": "customer_promise_due",
+          "due": {
+            "anchor": "commitment_due_at",
+            "offset_seconds": 0
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}:{commitment_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin",
+            "commitment_fulfilled"
+          ],
+          "strategy": "propose_followup"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "forbidden"
+      },
+      "time_rule_strategy_set": [
+        "close_goal",
+        "propose_followup"
+      ],
+      "revisit": "brief_answer"
+    }
+  ],
+  "strategies": {
+    "offer_material": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_material",
+        "send_message"
+      ],
+      "generation_constraints": [
+        "no_new_commitment"
+      ]
+    },
+    "acknowledge": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "no_new_commitment"
+      ]
+    },
+    "ask_slot": {
+      "required_slots": [
+        "current_handling"
+      ],
+      "allowed_intent_kinds": [
+        "send_message",
+        "remember"
+      ],
+      "generation_constraints": [
+        "one_question",
+        "no_new_commitment"
+      ]
+    },
+    "advance_goal": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message",
+        "send_material",
+        "remember"
+      ],
+      "generation_constraints": [
+        "current_goal_only",
+        "no_new_commitment"
+      ]
+    },
+    "answer_question": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message",
+        "send_material",
+        "remember"
+      ],
+      "generation_constraints": [
+        "evidence_required",
+        "no_new_commitment"
+      ]
+    },
+    "confirm_resume": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "confirmation_only",
+        "no_new_commitment"
+      ]
+    },
+    "propose_followup": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message",
+        "send_material"
+      ],
+      "generation_constraints": [
+        "current_goal_only",
+        "no_new_commitment"
+      ]
+    },
+    "close_goal": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "no_new_commitment"
+      ]
+    },
+    "wait": {
+      "required_slots": [],
+      "allowed_intent_kinds": [],
+      "generation_constraints": []
+    }
+  },
+  "proactivity_policy": {
+    "active_window_seconds": 120,
+    "reengagement_limits": {
+      "window_seconds": 3600,
+      "max_delivered": 1
+    },
+    "quiet_hours": {
+      "timezone": "Asia/Shanghai",
+      "ranges": [
+        {
+          "start": "20:00",
+          "end": "09:00"
+        }
+      ]
+    },
+    "exit_signals": [
+      "explicit_opt_out",
+      "complaint",
+      "human_takeover"
+    ],
+    "rhythm_templates": [
+      {
+        "id": "neutral",
+        "max_consecutive": 1
+      }
+    ]
+  },
+  "knowledge_bindings": [
+    "knowledge:demo-internal-corpus:v1"
+  ],
+  "policy_bindings": {
+    "authorization": "policy:authorization:v1",
+    "human_control": "policy:human-control:v1"
+  },
+  "outcome_rules": [],
+  "annotation_taxonomy": [],
+  "confidence_gate_policy_ref": "policy:confidence-observe:v1",
+  "manipulation_context_refs": [],
+  "assist_policy": {
+    "enabled_in_human_mode": false,
+    "allowed_strategy_set": [],
+    "expiry_seconds": 0
+  },
+  "golden_manifest": [
+    "m0-customer-message",
+    "m0-timer-envelope"
+  ],
+  "closing_frame_ref": "closing",
+  "memory_fields": [
+    {
+      "key": "industry",
+      "description": "他这家公司做哪一行。"
+    },
+    {
+      "key": "pain_point",
+      "description": "他自己说出来的那个损耗，照他的话记。"
+    },
+    {
+      "key": "team_size",
+      "description": "他团队多少人。"
+    },
+    {
+      "key": "current_tool",
+      "description": "他们现在用什么在接客户消息。"
+    },
+    {
+      "key": "decision_role",
+      "description": "他在这件事上说了算到什么程度。"
+    },
+    {
+      "key": "timeline",
+      "description": "他打算什么时候动这件事。"
+    }
+  ]
+}

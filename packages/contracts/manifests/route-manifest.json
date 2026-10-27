@@ -1,0 +1,892 @@
+[
+  {
+    "route": "GET /healthz (api)",
+    "auth_method": "public-health",
+    "resource": "service_health",
+    "action": "service_health.read",
+    "tenant_owned": false,
+    "repository": null,
+    "assertions": [
+      "ROUTE-001"
+    ]
+  },
+  {
+    "route": "POST /auth/login",
+    "auth_method": "employee-password",
+    "auth_repository": "tenant.resolve_login",
+    "resource": "session",
+    "action": "session.create",
+    "tenant_owned": true,
+    "repository": "employee.login",
+    "assertions": [
+      "AUTH-001",
+      "AUTH-TENANT-001",
+      "RLS-EMPLOYEE-001"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "POST /auth/refresh"
+      ],
+      "reason": "both mint a session credential through the same catalogued action: login creates the first member of a refresh family, refresh rotates it. Neither grants anything a role can hold -- `session.create` is what a successful authentication produces, not a permission anybody is given -- so the K1 second-class cost (parity's 'different action') is not paid here in the usual sense. Named anyway, per ADR-0048 二.1"
+    }
+  },
+  {
+    "route": "POST /auth/refresh",
+    "auth_method": "refresh-cookie",
+    "resource": "session",
+    "action": "session.create",
+    "tenant_owned": true,
+    "repository": "session.refresh",
+    "assertions": [
+      "AUTH-REFRESH-001",
+      "RLS-REFRESH-001"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "POST /auth/login"
+      ],
+      "reason": "both mint a session credential through the same catalogued action: login creates the first member of a refresh family, refresh rotates it. Neither grants anything a role can hold -- `session.create` is what a successful authentication produces, not a permission anybody is given -- so the K1 second-class cost (parity's 'different action') is not paid here in the usual sense. Named anyway, per ADR-0048 二.1"
+    }
+  },
+  {
+    "route": "GET /auth/me",
+    "auth_method": "bearer",
+    "resource": "session",
+    "action": "session.read_own",
+    "tenant_owned": true,
+    "repository": "employee_session.read",
+    "assertions": [
+      "AUTH-002",
+      "RLS-SESSION-001"
+    ]
+  },
+  {
+    "route": "POST /auth/logout",
+    "auth_method": "bearer",
+    "resource": "session",
+    "action": "session.delete",
+    "tenant_owned": true,
+    "repository": "employee_session.delete",
+    "assertions": [
+      "SESSION-ROUTE-001",
+      "RLS-SESSION-002"
+    ]
+  },
+  {
+    "route": "POST /auth/change-password",
+    "auth_method": "bearer-and-current-password",
+    "resource": "employee",
+    "action": "employee.change_own_password",
+    "tenant_owned": true,
+    "repository": "employee.change_own_password",
+    "assertions": [
+      "AUTH-003",
+      "RLS-EMPLOYEE-009"
+    ]
+  },
+  {
+    "route": "POST /ws/tickets",
+    "auth_method": "bearer",
+    "resource": "websocket_ticket",
+    "action": "websocket_ticket.create",
+    "tenant_owned": true,
+    "repository": "ws_ticket.create",
+    "assertions": [
+      "WS-001",
+      "RLS-TICKET-001"
+    ]
+  },
+  {
+    "route": "WS /ws",
+    "auth_method": "one-time-ticket",
+    "resource": "websocket_ticket",
+    "action": "websocket_ticket.consume",
+    "tenant_owned": true,
+    "repository": "ws_ticket.consume",
+    "assertions": [
+      "WS-002",
+      "WS-003",
+      "RLS-TICKET-002"
+    ]
+  },
+  {
+    "route": "GET /healthz (ingress)",
+    "auth_method": "public-health",
+    "resource": "service_health",
+    "action": "service_health.read",
+    "tenant_owned": false,
+    "repository": null,
+    "assertions": [
+      "ROUTE-002"
+    ]
+  },
+  {
+    "route": "POST /wecom_proxy/{config_id}/{path_token}",
+    "auth_method": "per-config-token",
+    "auth_repository": "channel_binding.resolve",
+    "resource": "inbox_event",
+    "action": "inbox_event.create",
+    "tenant_owned": true,
+    "repository": "inbox.create",
+    "assertions": [
+      "INGRESS-001",
+      "INGRESS-002",
+      "RLS-INBOX-001",
+      "INGRESS-BINDING-001"
+    ]
+  },
+  {
+    "route": "GET /profiles/releases",
+    "shares_action_with": {
+      "routes": [
+        "GET /profiles/releases/{release_id}"
+      ],
+      "reason": "ADR-0143 \u4e8c: for a merchant, \"which versions exist\" and \"what that version says\" are one question, and K1's criterion is whether the permission needs granting separately -- a tenant that may see its release list has no reason to be denied the release it is looking at. The two routes differ in what they project, not in who may ask: the list gives four metadata fields, this one gives the merchant half of the document and withholds four platform-detail keys (guarded by tests/contracts/test_profile_release_projection.py). Named here per ADR-0048 \u4e8c.1"
+    },
+    "auth_method": "bearer",
+    "resource": "profile_release",
+    "action": "profile_release.read",
+    "tenant_owned": true,
+    "repository": "profile.resolve",
+    "assertions": [
+      "PROFILE-ROUTE-001",
+      "RLS-PROFILE-002"
+    ]
+  },
+  {
+    "route": "GET /profiles/releases/{release_id}",
+    "shares_action_with": {
+      "routes": [
+        "GET /profiles/releases"
+      ],
+      "reason": "ADR-0143 \u4e8c: for a merchant, \"which versions exist\" and \"what that version says\" are one question, and K1's criterion is whether the permission needs granting separately -- a tenant that may see its release list has no reason to be denied the release it is looking at. The two routes differ in what they project, not in who may ask: the list gives four metadata fields, this one gives the merchant half of the document and withholds four platform-detail keys (guarded by tests/contracts/test_profile_release_projection.py). Named here per ADR-0048 \u4e8c.1"
+    },
+    "auth_method": "bearer",
+    "resource": "profile_release",
+    "action": "profile_release.read",
+    "tenant_owned": true,
+    "repository": "profile.resolve",
+    "assertions": [
+      "PROFILE-ROUTE-004",
+      "RLS-PROFILE-003"
+    ]
+  },
+  {
+    "route": "POST /profiles/releases",
+    "auth_method": "bearer",
+    "resource": "profile_release",
+    "action": "profile_release.create",
+    "tenant_owned": true,
+    "repository": "profile.publish",
+    "assertions": [
+      "PROFILE-ROUTE-002",
+      "PROFILE-PUBLISH-001",
+      "RLS-PROFILE-001"
+    ]
+  },
+  {
+    "route": "GET /profiles/schema",
+    "auth_method": "bearer",
+    "resource": "profile_schema",
+    "action": "profile_schema.read",
+    "tenant_owned": false,
+    "repository": null,
+    "assertions": [
+      "PROFILE-ROUTE-003"
+    ]
+  },
+  {
+    "route": "GET /tenants/current",
+    "auth_method": "bearer",
+    "resource": "tenant",
+    "action": "tenant.read",
+    "tenant_owned": true,
+    "repository": "tenant.read_current",
+    "assertions": [
+      "TENANT-ROUTE-001",
+      "RLS-TENANT-003"
+    ]
+  },
+  {
+    "route": "GET /employees",
+    "auth_method": "bearer",
+    "resource": "employee",
+    "action": "employee.list",
+    "tenant_owned": true,
+    "repository": "employee.list",
+    "assertions": [
+      "EMPLOYEE-ROUTE-001",
+      "RLS-EMPLOYEE-002"
+    ]
+  },
+  {
+    "route": "POST /employees",
+    "auth_method": "bearer",
+    "resource": "employee",
+    "action": "employee.create",
+    "tenant_owned": true,
+    "repository": "employee.create",
+    "assertions": [
+      "EMPLOYEE-ROUTE-007",
+      "RLS-EMPLOYEE-007"
+    ]
+  },
+  {
+    "route": "PATCH /employees/{employee_id}",
+    "auth_method": "bearer",
+    "resource": "employee",
+    "action": "employee.update",
+    "tenant_owned": true,
+    "repository": "employee.update_profile",
+    "assertions": [
+      "EMPLOYEE-ROUTE-004",
+      "RLS-EMPLOYEE-005"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "POST /employees/{employee_id}/deactivate"
+      ],
+      "reason": "both write the employees row through the same tenant-scoped permission: one changes what a person is called, the other ends their access. ADR-0048 K1 maps a command whose permission needs no separate grant onto update, and that is what parity's 'different action' third gives up -- named here, per §二.1"
+    }
+  },
+  {
+    "route": "PUT /employees/{employee_id}/roles",
+    "auth_method": "bearer",
+    "resource": "employee_role",
+    "action": "employee_role.update",
+    "tenant_owned": true,
+    "repository": "employee.replace_roles",
+    "assertions": [
+      "EMPLOYEE-ROUTE-008",
+      "RLS-EMPLOYEE-010"
+    ]
+  },
+  {
+    "route": "POST /employees/{employee_id}/password-reset",
+    "auth_method": "bearer",
+    "resource": "employee_password_reset",
+    "action": "employee_password_reset.create",
+    "tenant_owned": true,
+    "repository": "employee.password_reset",
+    "assertions": [
+      "EMPLOYEE-ROUTE-006",
+      "RLS-EMPLOYEE-008"
+    ],
+    "resource_differs_from_repository": "the permission is the command resource employee_password_reset.create (ADR-0048 K1); the rows written are employees, employee_sessions and audit_events, which is what the repository row names. A route's resource answers 'what may the caller do', a repository's answers 'what does it write'"
+  },
+  {
+    "route": "POST /employees/{employee_id}/deactivate",
+    "auth_method": "bearer",
+    "resource": "employee",
+    "action": "employee.update",
+    "tenant_owned": true,
+    "repository": "employee.deactivate",
+    "assertions": [
+      "EMPLOYEE-ROUTE-005",
+      "RLS-EMPLOYEE-006"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "PATCH /employees/{employee_id}"
+      ],
+      "reason": "both write the employees row through the same tenant-scoped permission: one changes what a person is called, the other ends their access. ADR-0048 K1 maps a command whose permission needs no separate grant onto update, and that is what parity's 'different action' third gives up -- named here, per §二.1"
+    }
+  },
+  {
+    "route": "POST /employees/{employee_id}/purge",
+    "auth_method": "bearer",
+    "resource": "employee",
+    "action": "employee.delete",
+    "tenant_owned": true,
+    "repository": "employee.purge",
+    "assertions": [
+      "EMPLOYEE-ROUTE-PURGE-001",
+      "RLS-EMPLOYEE-PURGE-001"
+    ]
+  },
+  {
+    "route": "GET /employees/stats",
+    "auth_method": "bearer",
+    "resource": "employee",
+    "action": "employee.read",
+    "tenant_owned": true,
+    "repository": "employee.stats",
+    "assertions": [
+      "EMPLOYEE-ROUTE-002",
+      "RLS-EMPLOYEE-003"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "GET /employees/{employee_id}/stats"
+      ],
+      "reason": "both are read projections over the same employee rows -- one aggregated over the tenant, one for a single employee -- so a role holding employee.read is meant to see both; granting one without the other was never a distinction this product makes"
+    }
+  },
+  {
+    "route": "GET /employees/{employee_id}/stats",
+    "auth_method": "bearer",
+    "resource": "employee",
+    "action": "employee.read",
+    "tenant_owned": true,
+    "repository": "employee.detail_stats",
+    "assertions": [
+      "EMPLOYEE-ROUTE-003",
+      "RLS-EMPLOYEE-004"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "GET /employees/stats"
+      ],
+      "reason": "both are read projections over the same employee rows -- one aggregated over the tenant, one for a single employee -- so a role holding employee.read is meant to see both; granting one without the other was never a distinction this product makes"
+    }
+  },
+  {
+    "route": "GET /permissions",
+    "auth_method": "bearer",
+    "resource": "permission",
+    "action": "permission.list",
+    "tenant_owned": false,
+    "repository": null,
+    "assertions": [
+      "PERMISSION-ROUTE-001"
+    ]
+  },
+  {
+    "route": "GET /roles",
+    "auth_method": "bearer",
+    "resource": "role",
+    "action": "role.list",
+    "tenant_owned": true,
+    "repository": "role.list",
+    "assertions": [
+      "ROLE-ROUTE-001",
+      "RLS-ROLE-001"
+    ]
+  },
+  {
+    "route": "POST /roles",
+    "auth_method": "bearer",
+    "resource": "role",
+    "action": "role.create",
+    "tenant_owned": true,
+    "repository": "role.create",
+    "assertions": [
+      "ROLE-ROUTE-002",
+      "RLS-ROLE-002"
+    ]
+  },
+  {
+    "route": "PUT /roles/{role_id}/permissions",
+    "auth_method": "bearer",
+    "resource": "role",
+    "action": "role.update",
+    "tenant_owned": true,
+    "repository": "role.replace_permissions",
+    "assertions": [
+      "ROLE-ROUTE-003",
+      "ROLE-GUARD-001"
+    ]
+  },
+  {
+    "route": "DELETE /roles/{role_id}",
+    "auth_method": "bearer",
+    "resource": "role",
+    "action": "role.delete",
+    "tenant_owned": true,
+    "repository": "role.delete",
+    "assertions": [
+      "ROLE-ROUTE-004",
+      "ROLE-GUARD-002"
+    ]
+  },
+  {
+    "route": "GET /channel-bindings",
+    "auth_method": "bearer",
+    "resource": "channel_config",
+    "action": "channel_config.list",
+    "tenant_owned": true,
+    "repository": "channel_binding.list",
+    "assertions": [
+      "CHANNEL-ROUTE-002",
+      "RLS-CHANNEL-002"
+    ]
+  },
+  {
+    "route": "PUT /channel-bindings/{config_id}/profile-release",
+    "auth_method": "bearer",
+    "resource": "channel_config",
+    "action": "channel_config.update",
+    "tenant_owned": true,
+    "repository": "channel_binding.repin",
+    "assertions": [
+      "CHANNEL-ROUTE-001",
+      "RLS-CHANNEL-001"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "PATCH /channel-bindings/{config_id}",
+        "POST /channel-bindings/{config_id}/deactivate"
+      ],
+      "reason": "three routes write the channel_bindings row through the same tenant-scoped permission: one repins which profile release the binding serves, one edits the binding's non-secret metadata (its provider instance id), and one stops the binding and destroys its callback token. ADR-0048 K1 maps a command whose permission needs no separate grant onto update, and that is what parity's 'different action' third gives up -- named here, per 二.1. The operator granting channel_config.update is granting all three, and the third one destroys a credential"
+    }
+  },
+  {
+    "route": "POST /channel-bindings/{config_id}/deactivate",
+    "auth_method": "bearer",
+    "resource": "channel_config",
+    "action": "channel_config.update",
+    "tenant_owned": true,
+    "repository": "channel_binding.deactivate",
+    "assertions": [
+      "CHANNEL-ROUTE-003",
+      "RLS-CHANNEL-003"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "PATCH /channel-bindings/{config_id}",
+        "PUT /channel-bindings/{config_id}/profile-release"
+      ],
+      "reason": "three routes write the channel_bindings row through the same tenant-scoped permission: one repins which profile release the binding serves, one edits the binding's non-secret metadata (its provider instance id), and one stops the binding and destroys its callback token. ADR-0048 K1 maps a command whose permission needs no separate grant onto update, and that is what parity's 'different action' third gives up -- named here, per 二.1. The operator granting channel_config.update is granting all three, and the third one destroys a credential"
+    }
+  },
+  {
+    "route": "PATCH /channel-bindings/{config_id}",
+    "auth_method": "bearer",
+    "resource": "channel_config",
+    "action": "channel_config.update",
+    "tenant_owned": true,
+    "repository": "channel_binding.update",
+    "assertions": [
+      "CHANNEL-ROUTE-004",
+      "RLS-CHANNEL-004"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "POST /channel-bindings/{config_id}/deactivate",
+        "PUT /channel-bindings/{config_id}/profile-release"
+      ],
+      "reason": "three routes write the channel_bindings row through the same tenant-scoped permission: one repins which profile release the binding serves, one edits the binding's non-secret metadata (its provider instance id), and one stops the binding and destroys its callback token. ADR-0048 K1 maps a command whose permission needs no separate grant onto update, and that is what parity's 'different action' third gives up -- named here, per 二.1. The operator granting channel_config.update is granting all three, and the third one destroys a credential"
+    }
+  },
+  {
+    "route": "GET /conversations/{conversation_id}",
+    "auth_method": "bearer",
+    "resource": "conversation_aggregate",
+    "action": "conversation_aggregate.read",
+    "tenant_owned": true,
+    "repository": "conversation_aggregate.detail",
+    "assertions": [
+      "CONVERSATION-ROUTE-001",
+      "RLS-AGGREGATE-002"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "GET /conversations/{conversation_id}/resume-preview"
+      ],
+      "reason": "both read one conversation's state through the same catalogue action: the detail route renders it, and resume-preview renders the takeover-period slice of it plus a digest. Granting conversation_aggregate.read therefore grants both, and an operator deciding whether to hand it out should not have to discover the second route by reading code. They are not one route because the digest is only meaningful as the first half of ADR-0054's two-phase resume."
+    }
+  },
+  {
+    "route": "POST /conversations/{conversation_id}/takeover",
+    "auth_method": "bearer",
+    "resource": "conversation_takeover",
+    "action": "conversation_takeover.create",
+    "tenant_owned": true,
+    "repository": "conversation_takeover.create",
+    "assertions": [
+      "CONVERSATION-ROUTE-002",
+      "RLS-AGGREGATE-003"
+    ]
+  },
+  {
+    "route": "POST /conversations/{conversation_id}/messages",
+    "auth_method": "bearer",
+    "resource": "conversation_message",
+    "action": "conversation_message.create",
+    "tenant_owned": true,
+    "repository": "conversation_message.create",
+    "assertions": [
+      "CONVERSATION-ROUTE-009",
+      "RLS-AGGREGATE-007"
+    ]
+  },
+  {
+    "route": "GET /conversations/{conversation_id}/resume-preview",
+    "auth_method": "bearer",
+    "resource": "conversation_aggregate",
+    "action": "conversation_aggregate.read",
+    "tenant_owned": true,
+    "repository": "conversation_aggregate.detail",
+    "assertions": [
+      "CONVERSATION-ROUTE-003"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "GET /conversations/{conversation_id}"
+      ],
+      "reason": "both read one conversation's state through the same catalogue action: the detail route renders it, and resume-preview renders the takeover-period slice of it plus a digest. Granting conversation_aggregate.read therefore grants both, and an operator deciding whether to hand it out should not have to discover the second route by reading code. They are not one route because the digest is only meaningful as the first half of ADR-0054's two-phase resume."
+    }
+  },
+  {
+    "route": "POST /conversations/{conversation_id}/resume",
+    "auth_method": "bearer",
+    "resource": "conversation_resume",
+    "action": "conversation_resume.create",
+    "tenant_owned": true,
+    "repository": "conversation_resume.create",
+    "assertions": [
+      "CONVERSATION-ROUTE-004",
+      "RLS-AGGREGATE-004"
+    ]
+  },
+  {
+    "route": "PUT /conversations/{conversation_id}/frames/{frame_id}/slots",
+    "auth_method": "bearer",
+    "resource": "conversation_slot",
+    "action": "conversation_slot.update",
+    "tenant_owned": true,
+    "repository": "conversation_slot.write",
+    "assertions": [
+      "CONVERSATION-ROUTE-006",
+      "RLS-AGGREGATE-005"
+    ]
+  },
+  {
+    "route": "POST /conversations/{conversation_id}/manual-tasks",
+    "auth_method": "bearer",
+    "resource": "manual_task",
+    "action": "manual_task.create",
+    "tenant_owned": true,
+    "repository": "manual_task.create",
+    "assertions": [
+      "MANUAL-TASK-ROUTE-001",
+      "RLS-MANUAL-TASK-001"
+    ]
+  },
+  {
+    "route": "GET /conversations/{conversation_id}/manual-tasks",
+    "auth_method": "bearer",
+    "resource": "manual_task",
+    "action": "manual_task.list",
+    "tenant_owned": true,
+    "repository": "manual_task.list",
+    "assertions": [
+      "MANUAL-TASK-ROUTE-002",
+      "RLS-MANUAL-TASK-002"
+    ]
+  },
+  {
+    "route": "POST /manual-tasks/{task_id}/claim",
+    "auth_method": "bearer",
+    "resource": "manual_task",
+    "action": "manual_task.claim",
+    "tenant_owned": true,
+    "repository": "manual_task.claim",
+    "assertions": [
+      "MANUAL-TASK-ROUTE-003",
+      "RLS-MANUAL-TASK-003"
+    ]
+  },
+  {
+    "route": "POST /manual-tasks/{task_id}/resolve",
+    "auth_method": "bearer",
+    "resource": "manual_task_resolution",
+    "action": "manual_task_resolution.create",
+    "tenant_owned": true,
+    "repository": "manual_task.resolve",
+    "assertions": [
+      "MANUAL-TASK-ROUTE-004",
+      "RLS-MANUAL-TASK-004"
+    ]
+  },
+  {
+    "route": "POST /manual-tasks/{task_id}/reassign",
+    "auth_method": "bearer",
+    "resource": "manual_task_reassignment",
+    "action": "manual_task_reassignment.create",
+    "tenant_owned": true,
+    "repository": "manual_task.reassign",
+    "assertions": [
+      "MANUAL-TASK-ROUTE-005",
+      "RLS-MANUAL-TASK-005"
+    ]
+  },
+  {
+    "route": "POST /manual-tasks/{task_id}/cancel",
+    "auth_method": "bearer",
+    "resource": "manual_task",
+    "action": "manual_task.cancel",
+    "tenant_owned": true,
+    "repository": "manual_task.cancel",
+    "assertions": [
+      "MANUAL-TASK-ROUTE-006",
+      "RLS-MANUAL-TASK-006"
+    ]
+  },
+  {
+    "route": "GET /conversations",
+    "auth_method": "bearer",
+    "resource": "conversation_aggregate",
+    "action": "conversation_aggregate.list",
+    "tenant_owned": true,
+    "repository": "conversation_aggregate.list",
+    "assertions": [
+      "CONVERSATION-ROUTE-008",
+      "RLS-AGGREGATE-006"
+    ]
+  },
+  {
+    "route": "GET /contacts",
+    "auth_method": "bearer",
+    "resource": "contact",
+    "action": "contact.list",
+    "tenant_owned": true,
+    "repository": "contact.list",
+    "assertions": [
+      "CONTACT-ROUTE-001",
+      "RLS-CONTACT-001"
+    ]
+  },
+  {
+    "route": "GET /contacts/{contact_id}",
+    "auth_method": "bearer",
+    "resource": "contact",
+    "action": "contact.read",
+    "tenant_owned": true,
+    "repository": "contact.read",
+    "assertions": [
+      "CONTACT-ROUTE-002",
+      "RLS-CONTACT-002"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "GET /contacts/by-conversation/{conversation_id}"
+      ],
+      "reason": "both answer with one contact and differ only in how it is named -- by its own id, or by the conversation it is on. K1's criterion asks whether the permission needs granting separately, and there is no operator who may look a customer up by id but not by conversation: it is the same fact reached two ways. So they share `contact.read` and pay the K1 second-class cost -- `control-plane-parity.md` §6.4 停用与 purge asks for 「不同 resource action、不同 route 和不同测试集合」, and the 'different action' half of it is not delivered for this pair, route and tests are still two. Named here per ADR-0048 二.1"
+    }
+  },
+  {
+    "route": "GET /contacts/by-conversation/{conversation_id}",
+    "auth_method": "bearer",
+    "resource": "contact",
+    "action": "contact.read",
+    "tenant_owned": true,
+    "repository": "contact.by_conversation",
+    "assertions": [
+      "CONTACT-ROUTE-003",
+      "RLS-CONTACT-003"
+    ],
+    "shares_action_with": {
+      "routes": [
+        "GET /contacts/{contact_id}"
+      ],
+      "reason": "both answer with one contact and differ only in how it is named -- by its own id, or by the conversation it is on. K1's criterion asks whether the permission needs granting separately, and there is no operator who may look a customer up by id but not by conversation: it is the same fact reached two ways. So they share `contact.read` and pay the K1 second-class cost -- `control-plane-parity.md` §6.4 停用与 purge asks for 「不同 resource action、不同 route 和不同测试集合」, and the 'different action' half of it is not delivered for this pair, route and tests are still two. Named here per ADR-0048 二.1"
+    }
+  },
+  {
+    "route": "GET /control-policy",
+    "auth_method": "bearer",
+    "resource": "control_policy",
+    "action": "control_policy.read",
+    "tenant_owned": true,
+    "repository": "control_policy.read",
+    "assertions": [
+      "CONTROL-POLICY-ROUTE-001"
+    ]
+  },
+  {
+    "route": "PUT /control-policy",
+    "auth_method": "bearer",
+    "resource": "control_policy",
+    "action": "control_policy.update",
+    "tenant_owned": true,
+    "repository": "control_policy.update",
+    "assertions": [
+      "CONTROL-POLICY-ROUTE-002",
+      "RLS-TENANT-007"
+    ],
+    "also_authorizes": {
+      "actions": [
+        "conversation_takeover.create"
+      ],
+      "reason": "`C0B-013` requires policy release and the bulk transition to be separate actions. Applying the policy to conversations already in flight hands them to people -- the takeover act, once per conversation, and this route writes a `conversation_takeover.create` audit row for each. Asking for both grants is what makes them separately grantable: changing the default costs one, moving a hundred live conversations costs both (user ruling 2026-09-06)"
+    }
+  },
+  {
+    "route": "GET /admin/tenants",
+    "auth_method": "bearer",
+    "resource": "tenant_registry",
+    "action": "tenant_registry.list",
+    "tenant_owned": false,
+    "repository": "tenant_registry.list",
+    "assertions": [
+      "TENANT-ROUTE-003",
+      "RLS-TENANT-005"
+    ]
+  },
+  {
+    "route": "POST /admin/tenants",
+    "auth_method": "bearer",
+    "resource": "tenant_registry",
+    "action": "tenant_registry.create",
+    "tenant_owned": false,
+    "repository": "tenant_registry.provision",
+    "assertions": [
+      "TENANT-ROUTE-002",
+      "RLS-TENANT-004"
+    ]
+  },
+  {
+    "route": "POST /admin/tenants/{tenant_id}/deactivate",
+    "auth_method": "bearer",
+    "resource": "tenant",
+    "action": "tenant.update",
+    "tenant_owned": true,
+    "repository": "tenant.deactivate",
+    "assertions": [
+      "TENANT-ROUTE-004",
+      "RLS-TENANT-006"
+    ]
+  },
+  {
+    "route": "POST /admin/tenants/{tenant_id}/purge",
+    "auth_method": "bearer",
+    "resource": "tenant",
+    "action": "tenant.delete",
+    "tenant_owned": true,
+    "repository": "tenant.purge",
+    "assertions": [
+      "TENANT-ROUTE-005",
+      "RLS-TENANT-008"
+    ]
+  },
+  {
+    "route": "POST /channel-bindings/{config_id}/credentials",
+    "auth_method": "bearer",
+    "resource": "channel_config",
+    "action": "channel_config.manage_secret",
+    "tenant_owned": true,
+    "repository": "channel_binding.register_credential",
+    "assertions": [
+      "CHANNEL-ROUTE-005",
+      "RLS-CHANNEL-005"
+    ]
+  },
+  {
+    "route": "GET /conversations/{conversation_id}/messages",
+    "auth_method": "bearer",
+    "resource": "message",
+    "action": "message.list",
+    "tenant_owned": true,
+    "repository": "message.page",
+    "assertions": [
+      "CONVERSATION-ROUTE-005",
+      "RLS-INBOX-003"
+    ]
+  },
+  {
+    "route": "POST /conversations/{conversation_id}/read",
+    "auth_method": "bearer",
+    "resource": "conversation_read_cursor",
+    "action": "conversation_read_cursor.update",
+    "tenant_owned": true,
+    "repository": "conversation_read_cursor.update",
+    "assertions": [
+      "CONVERSATION-ROUTE-007",
+      "RLS-READ-CURSOR-001"
+    ]
+  },
+  {
+    "route": "PUT /tenants/current/manager-contact",
+    "auth_method": "bearer",
+    "resource": "tenant_manager_contact",
+    "action": "tenant_manager_contact.update",
+    "tenant_owned": true,
+    "repository": "tenant_manager_contact.upsert",
+    "assertions": [
+      "MANAGER-CONTACT-ROUTE-001",
+      "RLS-TENANT-009"
+    ]
+  },
+  {
+    "route": "GET /materials",
+    "auth_method": "bearer",
+    "resource": "material",
+    "action": "material.list",
+    "tenant_owned": true,
+    "repository": "material.read",
+    "assertions": [
+      "MATERIAL-ROUTE-001",
+      "RLS-MATERIAL-001"
+    ]
+  },
+  {
+    "route": "GET /materials/{material_id}",
+    "auth_method": "bearer",
+    "resource": "material",
+    "action": "material.read",
+    "tenant_owned": true,
+    "repository": "material.read",
+    "assertions": [
+      "MATERIAL-ROUTE-002"
+    ]
+  },
+  {
+    "route": "POST /materials/{material_id}/archive",
+    "auth_method": "bearer",
+    "resource": "material",
+    "action": "material.invalidate",
+    "tenant_owned": true,
+    "repository": "material.invalidate",
+    "assertions": [
+      "MATERIAL-ROUTE-003",
+      "MATERIAL-ROUTE-004"
+    ]
+  },
+  {
+    "route": "GET /contacts/{contact_id}/memories",
+    "auth_method": "bearer",
+    "resource": "contact_memory",
+    "action": "contact_memory.list",
+    "tenant_owned": true,
+    "repository": "contact_memory.read",
+    "assertions": [
+      "MEMORY-ROUTE-001",
+      "RLS-MEMORY-001"
+    ]
+  },
+  {
+    "route": "POST /contacts/{contact_id}/memories",
+    "auth_method": "bearer",
+    "resource": "contact_memory",
+    "action": "contact_memory.create",
+    "tenant_owned": true,
+    "repository": "contact_memory.create",
+    "assertions": [
+      "MEMORY-ROUTE-002",
+      "MEMORY-ROUTE-003"
+    ]
+  },
+  {
+    "route": "PUT /contacts/{contact_id}/memories/{memory_id}",
+    "auth_method": "bearer",
+    "resource": "contact_memory",
+    "action": "contact_memory.update",
+    "tenant_owned": true,
+    "repository": "contact_memory.revise",
+    "assertions": [
+      "MEMORY-ROUTE-004"
+    ]
+  },
+  {
+    "route": "DELETE /contacts/{contact_id}/memories/{memory_id}",
+    "auth_method": "bearer",
+    "resource": "contact_memory",
+    "action": "contact_memory.invalidate",
+    "tenant_owned": true,
+    "repository": "contact_memory.invalidate",
+    "assertions": [
+      "MEMORY-ROUTE-005"
+    ]
+  }
+]

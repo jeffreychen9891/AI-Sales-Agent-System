@@ -1,0 +1,11 @@
+argon2-cffi>=23.1
+email-validator>=2.2
+fastapi>=0.115
+httpx>=0.28
+jsonschema>=4.23
+psycopg[binary,pool]>=3.2
+pydantic>=2.10
+PyJWT>=2.10
+redis>=5.2
+rfc3339-validator>=0.1.4
+uvicorn[standard]>=0.34

@@ -1,0 +1,436 @@
+{
+  "schema_version": "1.1.0",
+  "evaluator_release": "assertion-rubric-v1",
+  "evaluator_contract_ref": "regression/assertion-rubric-v1.contract.json",
+  "unknown_rubric_result": "FAIL",
+  "rubrics": {
+    "J02-E00-M1": {
+      "kind": "must",
+      "criterion": "发送一次包含身份和可提供帮助范围的开场，并以证书、钢印、照片或4C任一项作为低门槛信息入口。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "aggregate.target_stack"
+      ],
+      "statement_sha256": "f7064de0894999a01cb30c1873c4e5b043c828e47a8a0164f1b3132dd872d812"
+    },
+    "J02-E00-M2": {
+      "kind": "must",
+      "criterion": "建立会话初始目标帧状态。",
+      "input_paths": [
+        "aggregate.target_stack",
+        "audit.target_stack_transition"
+      ],
+      "statement_sha256": "767bd994ec1f6cb91e6f081b886ebeb92d1a7afe8055986369690ecaa35394a7"
+    },
+    "J02-E00-F1": {
+      "kind": "forbid",
+      "criterion": "不得讨论价格或一次连发多条客户可见消息。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "outbox.message_count"
+      ],
+      "statement_sha256": "e2e296ce38bf9cef57226aef4b6278a47254c7c6acdeb467d9faff6cf6ec3920"
+    },
+    "J02-E01-M1": {
+      "kind": "must",
+      "criterion": "自然回应并简短复述信息请求。",
+      "input_paths": [
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "99a70171c7647cc88737ad7b10bff6a57b42d1983b0f1a7ea0d0824031e6e5e9"
+    },
+    "J02-E01-F1": {
+      "kind": "forbid",
+      "criterion": "不得逐字重复完整开场。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "aggregate.recent_messages"
+      ],
+      "statement_sha256": "0897879cb66429f6759fa0c79e6f91ab265998ca3f4587c236a7262eca2274be"
+    },
+    "J02-E02-M1": {
+      "kind": "must",
+      "criterion": "解释型号不足以估价，回收价取决于4C或证书信息，并提供4C、证书编号或钢印任一替代路径。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "generation.claims"
+      ],
+      "statement_sha256": "67acd93334f18e5540c669cd982e60bacb7f57864a70589aab239a7355ea68cd"
+    },
+    "J02-E02-F1": {
+      "kind": "forbid",
+      "criterion": "参数不足时不得给出具体价格、比例或不耐烦表达。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "8033f7ee0f7ebf0e47ef4c5ce4cebc0eec8e69faf7126efc71865f742dd04681"
+    },
+    "J02-E03-M1": {
+      "kind": "must",
+      "criterion": "先共情，用一句话说明参数用于公平准确估价，再把下一步降为只报克拉、颜色和净度。",
+      "input_paths": [
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "0844fc8fe0358038f614df8c23c5d099f42c5fdc19ac159863384988e60945ca"
+    },
+    "J02-E03-F1": {
+      "kind": "forbid",
+      "criterion": "不得妥协直接报价或用长篇回复增加阻力。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "51b5004c50a0a2bb94203074e1414f557feac9474fbf10b64446ce8ac9871d76"
+    },
+    "J02-E04-M1": {
+      "kind": "must",
+      "criterion": "记录克拉和颜色，并只询问尚缺的净度、切工或证书信息。",
+      "input_paths": [
+        "understanding.slot_updates",
+        "aggregate.target_stack"
+      ],
+      "statement_sha256": "a1bbcf04ecb0993ecdcd221d7708f3a46eadfb97dc77fc1c203c00705e8d0420"
+    },
+    "J02-E04-F1": {
+      "kind": "forbid",
+      "criterion": "不得错误复述参数或编造稀有性、价值判断。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "generation.claims"
+      ],
+      "statement_sha256": "c54ef8a647a1f73489d6659728bcc6c52ea966f043fa4db17a5c385b5642f4f1"
+    },
+    "J02-E05-M1": {
+      "kind": "must",
+      "criterion": "记录净度和切工，准确复述完整口头4C一次，并询问是否有GIA或国检证书。",
+      "input_paths": [
+        "understanding.slot_updates",
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "e597147ed104a350a9d22c324e36971b37dcf0229524513722eae7b579788c79"
+    },
+    "J02-E05-F1": {
+      "kind": "forbid",
+      "criterion": "不得抬高等级、稀有性或把口头参数表述为已复检事实。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "generation.claims"
+      ],
+      "statement_sha256": "22caf56dcd50ff9f50daa39c1108fe764a8def0f1119c88c55de9600e1aa4989"
+    },
+    "J02-E06-M1": {
+      "kind": "must",
+      "criterion": "按口头4C提供经PricingPolicy校验的区间估价，并同轮明确以实物复检为准、证书齐全可按区间上限评估。",
+      "input_paths": [
+        "policy.pricing_decision",
+        "generation.customer_visible_segments",
+        "generation.claims"
+      ],
+      "statement_sha256": "d3a90354e12b46146d0b7e14537041ddfd4771ad929f372421295047a0c3da15"
+    },
+    "J02-E06-M2": {
+      "kind": "must",
+      "criterion": "报价后预告邮寄和检测的下一步。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "aggregate.target_stack"
+      ],
+      "statement_sha256": "335b24fa1cb03704e614fa523bf5cd5c17fa7cab78867aae98e8304e998ac976"
+    },
+    "J02-E06-F1": {
+      "kind": "forbid",
+      "criterion": "不得给最终承诺价、越过PricingPolicy边界或在参数已齐时无理由拒报。",
+      "input_paths": [
+        "policy.pricing_decision",
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "a0fdcaf1b62821c4a6e950e13b5e47d608c638bbcdf58f71ed8239901d724896"
+    },
+    "J02-E07-M1": {
+      "kind": "must",
+      "criterion": "同轮完整说明收件、复检4C、确认价格、打款的档案批准流程。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "generation.claims"
+      ],
+      "statement_sha256": "9e8f25c323249d9f7e6b7eaac09a7fd563bbdf9382ee9662d9cdbfd73704ce6b"
+    },
+    "J02-E07-F1": {
+      "kind": "forbid",
+      "criterion": "不得只说稍后讲解而不给实质流程。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "commitments.ledger"
+      ],
+      "statement_sha256": "a644dd45eb931aba02c09ad3c2b9f052879a3c7c139233f9524065541b62f57e"
+    },
+    "J02-E08-M1": {
+      "kind": "must",
+      "criterion": "只依据已发布档案素材说明保价寄送、全程录像、开箱录像和不满意原样退回中实际存在的保障项。",
+      "input_paths": [
+        "generation.claims",
+        "knowledge.evidence_refs"
+      ],
+      "statement_sha256": "09a7989a1503aca2c8a9a7d0fbdf33639c3c42eeda67ee1d5fc1c6f719ce6f14"
+    },
+    "J02-E08-F1": {
+      "kind": "forbid",
+      "criterion": "不得编造保险赔付额度、机构背书或素材以外的保障。",
+      "input_paths": [
+        "generation.claims",
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "a0dcf0a41d893076caa997670f32adab8dcd3abd3671457c212e3cf7aa4a1c81"
+    },
+    "J02-E09-M1": {
+      "kind": "must",
+      "criterion": "按档案固定政策回答数额或比例及退还条件；政策未覆盖时转人工。",
+      "input_paths": [
+        "generation.claims",
+        "knowledge.evidence_refs",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "cc2ab3ead424622d869255dd5261b1647ab98e0fb4898608e23a5f7410278822"
+    },
+    "J02-E09-F1": {
+      "kind": "forbid",
+      "criterion": "不得自造比例、数额或把意向金错误定性为押金或抵押。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "44d891f5caf58fc0f6306ee5b41c2cd3b194ed7075a5b41e0da246c993be54c1"
+    },
+    "J02-E10-M1": {
+      "kind": "must",
+      "criterion": "记录对意向金额度和寄送风险的异议，并等待同一debounce组完成后统一回应。",
+      "input_paths": [
+        "understanding.facts",
+        "aggregate.debounce_group"
+      ],
+      "statement_sha256": "34f71fafefa14a85a6e65b566b6dc9a298bec0ae207b58f6d71423f9b26d9132"
+    },
+    "J02-E10-F1": {
+      "kind": "forbid",
+      "criterion": "不得立即单独发一条回复或自行上调意向金。",
+      "input_paths": [
+        "outbox.message_count",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "be6902e11e1eb81e1fc22c9b24310782c1e8b929a20eff80570b0d77775c0d8f"
+    },
+    "J02-E11-M1": {
+      "kind": "must",
+      "criterion": "把补充异议合并进当前debounce组，不丢失固定政策与安全顾虑上下文。",
+      "input_paths": [
+        "aggregate.debounce_group",
+        "understanding.facts"
+      ],
+      "statement_sha256": "5e2787ae513e3bf60b946de0cb90dae6f2fbd869ace9fb30cae7aba6e5a9ef33"
+    },
+    "J02-E11-F1": {
+      "kind": "forbid",
+      "criterion": "不得产生第二条独立回复或暗示AI可以协商调整固定政策。",
+      "input_paths": [
+        "outbox.message_count",
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "4142ceb01decc4f12c6aab5f894f7d4cca598b5e9d6cd47a2d1d652655a87a77"
+    },
+    "J02-E12-M1": {
+      "kind": "must",
+      "criterion": "三条异议合并为一轮回复：共情安全顾虑，解释意向金性质及档案支持的保障，并且只在档案素材已有时提供到店、同城面交或视频验货等增信选项。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "knowledge.evidence_refs",
+        "outbox.message_count"
+      ],
+      "statement_sha256": "30348833243ab414b763c884ee3a6a154eb7eb8e4535683a6a54b333012f7896"
+    },
+    "J02-E12-M2": {
+      "kind": "must",
+      "criterion": "需要调整固定意向金时只能提出帮客户申请并创建人工处理路径。",
+      "input_paths": [
+        "commitments.ledger",
+        "intent_records.manual_task"
+      ],
+      "statement_sha256": "f4589c41b77c551f58a34cd3e0e32b85a8742fc3d21e6a4981d731364687627b"
+    },
+    "J02-E12-F1": {
+      "kind": "forbid",
+      "criterion": "不得自行上调意向金、提供素材外增信承诺、反驳客户或一轮连发多条。",
+      "input_paths": [
+        "policy.pricing_decision",
+        "generation.customer_visible_segments",
+        "outbox.message_count"
+      ],
+      "statement_sha256": "eb46153c31010306c37483d761082e423abbcd82dc3ee534d8c39681bc6acfc7"
+    },
+    "J02-E13-M1": {
+      "kind": "must",
+      "criterion": "得体收尾、不纠缠并保留联系入口；建立goal_stall定时事件，在24小时内最多一次轻提醒且不含新价格。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "scheduled_events.goal_stall",
+        "policy.proactivity_decision"
+      ],
+      "statement_sha256": "6c8c1536ec9a8f04dfb81a40dc13c9e9ea227aca8f5d2a962b88f54b18683d79"
+    },
+    "J02-E13-F1": {
+      "kind": "forbid",
+      "criterion": "不得立即连发挽留、主动降价、永久退出或在客户明确拒绝后继续跟进。",
+      "input_paths": [
+        "outbox.message_count",
+        "scheduled_events.goal_stall",
+        "policy.proactivity_decision"
+      ],
+      "statement_sha256": "7adc068d3b3787a5b862accc08bdabe5a63dc66fa493369f5c027107e9bbaea1"
+    },
+    "J03-E00-M1": {
+      "kind": "must",
+      "criterion": "发送一次简短开场并引导客户提供证书、钢印、照片或4C任一信息。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "aggregate.target_stack"
+      ],
+      "statement_sha256": "51a82276caea86624c7631471eb4dcf0869b163a43343b82580fe71e014c2217"
+    },
+    "J03-E00-F1": {
+      "kind": "forbid",
+      "criterion": "不得重复开场、谈价格或连发多条。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "outbox.message_count"
+      ],
+      "statement_sha256": "aeeaa0395551b88f2cd27bfb077479f5a3833b0151e7c695b44771365e9f7d33"
+    },
+    "J03-E01-M1": {
+      "kind": "must",
+      "criterion": "确认收到图片并走图片识别；成功时只写入可见信息，失败时请求钢印特写或转人工。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "understanding.slot_updates",
+        "audit.image_processing"
+      ],
+      "statement_sha256": "8ea9cbcf77f96a1b006491effe9ef646fbe494dc35d680749223c567eb428279"
+    },
+    "J03-E01-F1": {
+      "kind": "forbid",
+      "criterion": "不得吞图、凭图片直接报价或断言一看就是好货。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision",
+        "generation.claims"
+      ],
+      "statement_sha256": "c8f40efe263880229bf0b06848dcef090cf6f12622abab70947b041adb1c573f"
+    },
+    "J03-E02-M1": {
+      "kind": "must",
+      "criterion": "明确无证书仍可回收，提供钢印、参数或实物复检替代路径；仅允许区间估价并说明复检出证后按证书等级定价。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision",
+        "understanding.slot_updates"
+      ],
+      "statement_sha256": "68221e4a8e99f9f38bb91c0c2db1970b4463d2b84c46709e18d1d45dcebe1acf"
+    },
+    "J03-E02-F1": {
+      "kind": "forbid",
+      "criterion": "不得因无证书劝退、主动压价或断言肯定卖不上价。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "generation.claims"
+      ],
+      "statement_sha256": "49604f0a80848472b5eb6524f400665c8400fbe01ac14f0584b5dbb914523246"
+    },
+    "J03-E03-M1": {
+      "kind": "must",
+      "criterion": "把pt950记录为铂金托材质，把D0035ct记录为主石钢印并按0.035ct即3.5分解读。",
+      "input_paths": [
+        "understanding.slot_updates",
+        "aggregate.target_stack"
+      ],
+      "statement_sha256": "2a9fd6b66f2658303525cf196a7d0da6cac7e8f28ecce601f1e6bf47c02c34f7"
+    },
+    "J03-E03-M2": {
+      "kind": "must",
+      "criterion": "如实说明该小分数主石价值有限，并提供托架按pt950称重回收的正向路径。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "generation.claims",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "dfd31d917cf0adec3483220afd48f7359b7950d9a03babf382a21e6eb17411c6"
+    },
+    "J03-E03-F1": {
+      "kind": "forbid",
+      "criterion": "不得按0.35ct或更高克拉臆测、虚抬主石价值或绕开PricingPolicy给托架估价。",
+      "input_paths": [
+        "understanding.slot_updates",
+        "generation.claims",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "a79855ff4f9d3e8aef88a504b53185c09703b941468b3cdebf577b373236b4f2"
+    },
+    "J03-E04-M1": {
+      "kind": "must",
+      "criterion": "记录购入价未知，明确不影响当前回收评估并继续已选择的钢印和称重路径。",
+      "input_paths": [
+        "understanding.slot_updates",
+        "generation.customer_visible_segments",
+        "aggregate.target_stack"
+      ],
+      "statement_sha256": "46062a205577fc63f6f771affc9a70a9ef2fb336e3263a38fea73ac4a770048d"
+    },
+    "J03-E04-F1": {
+      "kind": "forbid",
+      "criterion": "不得纠缠追问购入价或把购入价当作回收估价依据。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "policy.pricing_decision"
+      ],
+      "statement_sha256": "164b31a8553e1697fa2b5157cd514ee45af5e6c4610da53004a1c6b9af01572e"
+    },
+    "J03-E05-M1": {
+      "kind": "must",
+      "criterion": "确认并保持pt950、D0035ct、0.035ct和3.5分槽位，继续主石如实告知与托架称重回收路径。",
+      "input_paths": [
+        "understanding.slot_updates",
+        "aggregate.target_stack",
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "d5cfbf9f02744d3e5ef97ff16e2dc8a6e9a01d8ca18fca5c5e1a7b9ba15db1b0"
+    },
+    "J03-E05-F1": {
+      "kind": "forbid",
+      "criterion": "不得把确认后的D0035ct升级解释为0.35ct或重复给出未经称重和PricingPolicy校验的价格。",
+      "input_paths": [
+        "understanding.slot_updates",
+        "policy.pricing_decision",
+        "generation.customer_visible_segments"
+      ],
+      "statement_sha256": "6e83933fb247d4a402fabdc823df5d3a19fdc65fa5ab07f435c26497bd707502"
+    },
+    "J03-E06-M1": {
+      "kind": "must",
+      "criterion": "不施压，给出方便时补拍钢印特写的异步路径；建立goal_stall定时事件，在24小时内最多一次温和提醒。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "scheduled_events.goal_stall",
+        "policy.proactivity_decision"
+      ],
+      "statement_sha256": "1131882d320e2b9252b4c0254124f98d35f518ff75e5a1ae44691c2a78ea1549"
+    },
+    "J03-E06-F1": {
+      "kind": "forbid",
+      "criterion": "不得反复催促、立即永久结束、写入不存在的客户承诺或在提醒中给出新价格。",
+      "input_paths": [
+        "generation.customer_visible_segments",
+        "commitments.ledger",
+        "scheduled_events.goal_stall"
+      ],
+      "statement_sha256": "8f2a0bf0e65a66e661218bc42b206c6ee6852f9a167d00264a5af925afd675e0"
+    }
+  }
+}

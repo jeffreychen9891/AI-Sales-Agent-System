@@ -1,0 +1,71 @@
+-- 058: let the API read `materials` and archive a version.
+--
+-- **`053`'s own plan, like `057` was `054`'s.** That migration says:
+--
+--   > **No GRANT.** Same call `050` made and for the same reason: nothing reads
+--   > or writes this table yet.
+--
+-- E3-6 brings the three routes freeze B4 leaves in the first version
+-- (`GET /materials`, `GET /materials/{id}`, `POST /materials/{id}/archive`), so
+-- this is the batch that grants what they need.
+--
+-- **`fastagent_app`, and the role was checked rather than assumed.** These three
+-- are API routes; the API connects on `FASTAGENT_DATABASE_URL`, which is
+-- `fastagent_app` (`scripts/ci.sh`; `app.py` builds its `Database` from
+-- `resolved.database_url`). **E4-2 got this wrong on its first pass** -- it
+-- granted `contact_memories` to `fastagent_app` when the writer was the worker
+-- -- and the fix cost a re-read rather than a re-gate only because the gate had
+-- already failed for a different reason. Checking is cheaper than the analogy.
+--
+-- **`fastagent_worker` gets nothing here, and that is not an oversight.**
+-- The send path resolves `asset:` references at send time (裁定五), which is
+-- E3-4's work, not E3-6's. **A permission with no holder is harder to notice
+-- than a missing one** (`054`'s sentence, applied to the other side): granting
+-- the worker a read it does not yet perform would leave nothing to explain it.
+-- E3-4 grants what it needs when it can say why.
+--
+-- **`SELECT, UPDATE` and deliberately not `INSERT` or `DELETE`.**
+--
+-- * **No `INSERT`** -- ADR-0130 裁定一 put the upload path out of the first
+--   version, so **none of the three routes can create a material**. Rows are
+--   placed by hand (`docs/plans/material-placement-spec-2026-09-12.md`). A
+--   route that could insert is exactly what that ruling removed, and a
+--   permission that allows it would be the ruling quietly reopening.
+-- * **`UPDATE` is for archiving only, and the database is what keeps it that
+--   way.** `053`'s `materials_immutable` trigger refuses every column but the
+--   lifecycle pair, refuses re-writing `archived_at`, and refuses
+--   un-archiving. So the grant is broad where the trigger is narrow, and **the
+--   narrow one is the one that holds**: this is a table-level privilege because
+--   Postgres has no "update only these two columns, in one direction" grant,
+--   and the direction lives in the trigger.
+-- * **No `DELETE`** -- removal goes through `purge_tenant_data`, whose
+--   permission is attached to an audited function body rather than handed to a
+--   role (`043`).
+--
+-- **The archive route reads three more tables, and every grant already exists.**
+-- Checked rather than assumed, because one of them is narrower than it looks:
+--
+-- * `profile_releases` -- `fastagent_app` holds `SELECT` (`022`);
+-- * `channel_bindings` -- `fastagent_app` holds a **column-level**
+--   `SELECT (tenant_id, config_id, profile_release_id)`. The declared-assets
+--   query touches `tenant_id` and `profile_release_id` only, **both inside that
+--   list**. A future version of that query that reaches for any other column of
+--   `channel_bindings` will fail at runtime rather than at review, so the two
+--   columns it may use are named here;
+-- * `conversation_aggregates` -- `fastagent_app` holds `SELECT` since
+--   `001_m0.sql:403`. **This table joined the query in the independent review's
+--   P1-2**: "live" cannot mean "some binding points at it", because a rebind
+--   takes a `LIMIT`, is gated by `repin_live_conversations`, and selects by
+--   `config_id` only -- so conversations left pinned to a release no binding
+--   points at are **the normal case, not an edge one**
+--   (`profiles/binding.py` returns `remaining` and `unlinked` to say so).
+--   **No grant was needed for that widening**, which is why it did not have to
+--   wait for another migration.
+--
+-- **No RLS change.** `053` already set the policy and `FORCE ROW LEVEL
+-- SECURITY`.
+
+GRANT SELECT, UPDATE ON materials TO fastagent_app;
+
+INSERT INTO schema_migrations(version) VALUES ('058_materials_grant')
+ON CONFLICT (version) DO NOTHING;

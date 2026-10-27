@@ -1,0 +1,29 @@
+{
+  "_source": "evidence/m1b/first-inbound-2026-09-10/round3/README.md §三（该目录随本批一并入库——独立审查 2026-09-10 P1-1：本批唯一的事实起点原本不在仓里，三处引用都无人能复核）。§三 —— 第三轮真实链路写进 outbox_messages 的三条 command.content。三条全部 FAILED / unsendable_content_type，provider_operation_id 为空：适配器本地就拒了，供应商从未被调用。",
+  "_shape_is_the_datum": "文本按运维记录原样引用，记录里截断的这里也截断（末尾 …）。本夹具钉的是**结构**，不是措辞——而结构是逐字的。",
+  "_tenant": "stage-synthetic-01（合成租户，非真实商家客户内容）",
+  "commands": [
+    {
+      "n": 1,
+      "note": "没有 type 键",
+      "content": {"text": "收到，您回复的确认我们已记录…"}
+    },
+    {
+      "n": 2,
+      "note": "type 在 segment 里，不在 content 层；这一条同时是那句英文回复（语言不一致已单独登记）",
+      "content": {
+        "segments": [
+          {
+            "type": "text",
+            "content_or_ref": "I couldn't read the attached file, so I don't have your request yet."
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "note": "没有 type 键",
+      "content": {"text": "收到您的消息，但图片内容暂时无法读取…"}
+    }
+  ]
+}

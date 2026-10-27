@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "evaluator_release": "assertion-rubric-v1",
+  "unknown_result": "FAIL",
+  "statement_role": "audit_only",
+  "dispatch": "rubric_id",
+  "paths": {
+    "aggregate.debounce_group": {"source": "ordered inbox/outbox projection", "value_type": "object"},
+    "aggregate.recent_messages": {"source": "ConversationAggregate projection", "value_type": "array"},
+    "aggregate.target_stack": {"source": "ConversationAggregate.target_stack", "value_type": "array"},
+    "audit.image_processing": {"source": "AuditEvent image-processing evidence", "value_type": "object"},
+    "audit.target_stack_transition": {"source": "AuditEvent target-stack transition", "value_type": "object"},
+    "commitments.ledger": {"source": "CommitmentRecord set", "value_type": "array"},
+    "generation.claims": {"source": "GenerationResult.claims", "value_type": "array"},
+    "generation.customer_visible_segments": {"source": "GenerationResult.customer_visible_segments", "value_type": "array"},
+    "intent_records.manual_task": {"source": "IntentRecord filtered by kind=manual_task", "value_type": "array"},
+    "knowledge.evidence_refs": {"source": "RetrievalEvidence source references", "value_type": "array"},
+    "outbox.message_count": {"source": "durable outbox projection", "value_type": "integer"},
+    "policy.pricing_decision": {"source": "PricingPolicy decision evidence", "value_type": "object"},
+    "policy.proactivity_decision": {"source": "ProactivityPolicy decision evidence", "value_type": "object"},
+    "scheduled_events.goal_stall": {"source": "ScheduledEvent filtered by kind=goal_stall", "value_type": "array"},
+    "understanding.facts": {"source": "UnderstandingResult.facts", "value_type": "array"},
+    "understanding.slot_updates": {"source": "UnderstandingResult.slot_updates", "value_type": "array"}
+  }
+}

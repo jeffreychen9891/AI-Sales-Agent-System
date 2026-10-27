@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.0.0",
+  "release_id": "7c5b93a2-1e64-4d0f-8b77-2f9a6c0e4d18",
+  "version": "2026.09.02-2",
+  "issued_at": "2026-09-02T12:00:00Z",
+  "status": "superseded",
+  "envelope_deadline_ms": 30000,
+  "roles": {
+    "UNDERSTAND_VALUE": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 6000,
+      "fallback": [],
+      "failure_action": "clarify",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "沿用 v1 现状，待 M1a 实测后重估",
+      "max_output_tokens": 1024
+    },
+    "PLAN_CAPABILITY": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "manual_review",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "沿用 v1 现状，待 M1a 实测后重估",
+      "max_output_tokens": 2048
+    },
+    "GENERATE_VALUE": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "clarify",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "沿用 v1 现状，待 M1a 实测后重估",
+      "max_output_tokens": 1024
+    },
+    "COMMITMENT_CAPABILITY": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 6000,
+      "fallback": [],
+      "failure_action": "manual_review",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "沿用 v1 现状，待 M1a 实测后重估",
+      "max_output_tokens": 1024
+    },
+    "VISION": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash-vision-exp",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "no_message",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "沿用 v1 现状，待 M1a 实测后重估；不可用时降级为纯文本处理，不改 intent",
+      "max_output_tokens": 1024
+    }
+  },
+  "embedding": {
+    "provider_id": "volcengine-ark",
+    "model_id": "doubao-embedding-vision-251215",
+    "api_base": "https://ark.cn-beijing.volces.com/api/v3",
+    "region": "cn-beijing",
+    "dimension": 1024,
+    "distance_metric": "cosine",
+    "normalization": "l2",
+    "truncation_policy": "reject-over-limit"
+  },
+  "ceilings_cny": {
+    "soft_daily": 20,
+    "hard_daily": 50,
+    "soft_monthly": 300,
+    "hard_monthly": 600,
+    "provenance": "占位，待实测调整（用户 2026-09-01 给出，非按重估方法算出的结论）"
+  },
+  "unverified_fields": [
+    {
+      "path": "roles.*.context_limit_tokens",
+      "reason": "未经 v2 自有账号验证；不得凭第三方资料填入"
+    },
+    {
+      "path": "roles.*.price_cny_per_million_tokens",
+      "reason": "缺合同价或当时公开价截图，人民币记账无法成立"
+    },
+    {
+      "path": "credential.owner",
+      "reason": "v2 尚无自有 DeepSeek credential；禁止复用 v1 凭据（AGENTS.md legacy 边界）"
+    },
+    {
+      "path": "roles.*.fallback",
+      "reason": "四个 tier 指向同一模型，兜底链为空；豆包档位 ID 未验证前无法登记备选"
+    }
+  ],
+  "provenance": "四个 logical tier 当前指向同一模型，这不是「已按档位分离」。provider 与 RFC §10.1 已批准的「豆包主 / DeepSeek 兜底」不一致，差异已在 backlog 登记待议，触发重估的条件是 M1a 第一批脱敏 replay 的每角色 P50/P95 token 与失败率。 本 release 取代 2026.09.02-1，唯一实质变化是为每个角色补上 max_output_tokens：成本硬上限按调用前预估拦截，没有输出上界就只能靠猜，因此宁可让预估口径显式化。"
+}

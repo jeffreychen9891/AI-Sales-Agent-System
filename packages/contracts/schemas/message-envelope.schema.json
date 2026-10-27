@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/message-envelope.schema.json",
+  "title": "MessageEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "event_id", "event_type", "actor", "tenant_id",
+    "conversation_id", "occurred_at", "received_at", "correlation_id",
+    "runtime_deadline_at", "profile_release_id", "content", "auth_evidence"
+  ],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$"},
+    "event_id": {"type": "string", "format": "uuid"},
+    "external_event_id": {"type": "string", "minLength": 1, "maxLength": 255},
+    "event_type": {
+      "enum": ["customer_message", "channel_event", "timer", "business_event", "delivery_receipt", "internal"]
+    },
+    "actor": {
+      "type": "object", "additionalProperties": false, "required": ["party"],
+      "properties": {
+        "party": {"enum": ["customer", "employee", "system", "external"]},
+        "actor_id": {"type": ["string", "null"], "maxLength": 255},
+        "service_id": {"type": ["string", "null"], "maxLength": 255}
+      }
+    },
+    "tenant_id": {"type": "string", "format": "uuid"},
+    "conversation_id": {"type": "string", "format": "uuid"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "received_at": {"type": "string", "format": "date-time"},
+    "correlation_id": {"type": "string", "format": "uuid"},
+    "causation_id": {"type": ["string", "null"], "format": "uuid"},
+    "runtime_deadline_at": {"type": "string", "format": "date-time"},
+    "profile_release_id": {"type": "string", "format": "uuid"},
+    "aggregate_generation": {"type": ["integer", "null"], "minimum": 0},
+    "content": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {
+        "type": {"enum": ["text", "image", "file", "audio", "location", "quote", "event"]},
+        "text": {"type": "string", "maxLength": 20000},
+        "payload_ref": {"type": "string", "maxLength": 2048},
+        "event": {"type": "object"}
+      }
+    },
+    "auth_evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["verifier_id", "verifier_version", "credential_fingerprint"],
+      "properties": {
+        "verifier_id": {"type": "string"},
+        "verifier_version": {"type": "string"},
+        "credential_fingerprint": {"type": "string"},
+        "nonce": {"type": ["string", "null"]},
+        "timestamp": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "scheduled_event_id": {"type": ["string", "null"], "format": "uuid"},
+    "business_event": {"type": ["object", "null"]},
+    "raw_payload_ref": {"type": ["string", "null"], "maxLength": 2048}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"event_type": {"const": "timer"}}},
+      "then": {
+        "required": ["scheduled_event_id", "aggregate_generation"],
+        "properties": {
+          "scheduled_event_id": {"type": "string", "format": "uuid"},
+          "aggregate_generation": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "business_event"}}},
+      "then": {
+        "required": ["business_event", "aggregate_generation"],
+        "properties": {
+          "business_event": {"type": "object"},
+          "aggregate_generation": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  ]
+}

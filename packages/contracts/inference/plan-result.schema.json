@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.invalid/contracts/inference/plan-result.schema.json",
+  "title": "PlanResult",
+  "description": "Output of the planning step. A PlanResult is only usable after the platform validator proves it against the profile and the target-stack state machine.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "origin",
+    "target_stack_operation",
+    "selected_strategy_id",
+    "strategy_reason_code",
+    "confidence",
+    "required_slot_requests",
+    "scheduled_event_changes",
+    "candidate_intents",
+    "generation_constraints",
+    "manual_review_reason",
+    "model_evidence"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "origin": {
+      "description": "model = proposed by the planning model; safe_fallback = deterministic platform output after a rejected plan.",
+      "enum": ["model", "safe_fallback"]
+    },
+    "target_stack_operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op", "target_frame_definition_id"],
+      "properties": {
+        "op": {"enum": ["keep", "push", "repair", "request_pop", "complete", "abandon"]},
+        "target_frame_definition_id": {"type": ["string", "null"], "maxLength": 128}
+      }
+    },
+    "selected_strategy_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "strategy_reason_code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,63}$"},
+    "confidence": {"$ref": "https://fastagent.invalid/contracts/inference/confidence.schema.json"},
+    "required_slot_requests": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 64}
+    },
+    "scheduled_event_changes": {
+      "description": "ADR-0096 (2026-09-07) revises this field's standing: what the model puts here is a *proposal*, not a decision. The producer of `scheduled_events` is the deterministic TimeRule derivation (RFC 6.2); a proposal is overridden or refused before anything is written. The producer landed in M1b B4-2 (`services/worker/.../time_rules.py`): a `TimeRule` derives `due_at` and `dedupe_key`, and **nothing in this field is ever persisted** -- `due_at` and `semantic_key` proposed here reach no table. The validation that still runs over it (`inference_validation._validate_scheduled_event_changes`) checks that a proposal stays inside the frame's declared kinds; it must not be read as evidence that the proposal was acted on. The shape below is unchanged.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["create", "cancel", "reschedule"],
+      "properties": {
+        "create": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "due_at", "semantic_key", "target_frame_id"],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "silence_check",
+                  "goal_stall",
+                  "followup_due",
+                  "customer_promise_due",
+                  "dormant_reengagement",
+                  "business_event_followup",
+                  "ai_commitment_due"
+                ]
+              },
+              "due_at": {"type": "string", "format": "date-time"},
+              "semantic_key": {"type": "string", "minLength": 1, "maxLength": 128},
+              "target_frame_id": {"type": "string", "format": "uuid"},
+              "commitment_id": {"type": "string", "format": "uuid"}
+            }
+          }
+        },
+        "cancel": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["event_id", "reason"],
+            "properties": {
+              "event_id": {"type": "string", "format": "uuid"},
+              "reason": {"type": "string", "minLength": 1, "maxLength": 128}
+            }
+          }
+        },
+        "reschedule": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["event_id", "new_due_at", "reason"],
+            "properties": {
+              "event_id": {"type": "string", "format": "uuid"},
+              "new_due_at": {"type": "string", "format": "date-time"},
+              "reason": {"type": "string", "minLength": 1, "maxLength": 128}
+            }
+          }
+        }
+      }
+    },
+    "candidate_intents": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "typed_payload", "idempotency_basis"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "send_message",
+              "send_material",
+              "remember",
+              "schedule_event",
+              "cancel_event",
+              "reschedule_event",
+              "quote",
+              "create_order",
+              "update_order",
+              "followup",
+              "handoff",
+              "manual_task"
+            ]
+          },
+          "typed_payload": {"type": "object"},
+          "idempotency_basis": {"type": "string", "minLength": 1, "maxLength": 200}
+        }
+      }
+    },
+    "generation_constraints": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 64}
+    },
+    "knowledge_query": {
+      "description": "What to look up in the knowledge base this turn, or null when none is needed; absent means null. Deliberately unbounded and never plan-invalidating: an unusable request degrades to no lookup. Not a generation_constraints word (that vocabulary is closed and holds prohibitions) and not a boolean (only the planning step knows what to look up). Why, and who reads it: worker.inference_validation.",
+      "type": ["string", "null"]
+    },
+    "manual_review_reason": {"type": ["string", "null"], "maxLength": 256},
+    "model_evidence": {"$ref": "https://fastagent.invalid/contracts/inference/model-evidence.schema.json"}
+  }
+}

@@ -1,0 +1,58 @@
+-- 057: let the worker read and write `contact_memories`.
+--
+-- **This grant is `054`'s own plan, not an afterthought.** That migration says,
+-- in as many words:
+--
+--   > **No GRANT**, same as `050` and `053`: nothing reads or writes this table
+--   > yet. E4-2 brings the `remember` write path and E4-3 the routes; each
+--   > grants what it needs. A permission with no holder is harder to notice
+--   > than a missing one.
+--
+-- E4-2 is that batch. **The reasoning was right and it still cost a gate run**:
+-- the first E4-2 gate came back `131 failed`, every one of them
+-- `permission denied for table contact_memories` -- because `prepare` now reads
+-- the table on **every** turn (`_remembered_fields`), so a missing grant does
+-- not break the `remember` path alone, it breaks every conversation.
+--
+-- **That blast radius is worth naming.** A permission only the new feature
+-- needed would have failed only the new feature's tests. This one sits on the
+-- turn's common path, which is what made a missing `GRANT` look like a
+-- catastrophic regression rather than a missing line.
+--
+-- **`fastagent_worker`, not `fastagent_app`.**
+--
+-- The first draft of this migration granted to `fastagent_app`, by analogy with
+-- `051`, and **it would not have fixed a single one of those 131 failures**:
+-- `remember` is written by the pipeline, and the pipeline connects on
+-- `FASTAGENT_WORKER_DATABASE_URL` (`scripts/ci.sh`, and
+-- `Database(settings.worker_database_url)` in every test that drives a turn).
+-- `051`'s analogy did not hold because the knowledge import path is a different
+-- caller on a different connection. **The role was checked rather than assumed
+-- on the second pass; the first pass assumed.**
+--
+-- `fastagent_app` gets nothing here on purpose: **the API touches this table
+-- only through E4-3's routes**, and that batch grants what those routes need.
+--
+-- **`SELECT, INSERT` and deliberately not `UPDATE`.**
+--
+-- E4-2 writes revision 1 and never rewrites: 裁定八 gives the model the right to
+-- append and withholds the right to change what is already there
+-- (ADR-0131; `docs/plans/e3-e4-schedule-2026-09-11.md` §4.3.4). The write path
+-- refuses a proposal whose field already has an active memory rather than
+-- superseding it, so **nothing in the worker needs `UPDATE`**.
+--
+-- Withholding it is therefore not caution, it is the same rule expressed twice:
+-- once as a refusal an operator can read, once as a permission the role does
+-- not hold. **E4-3's `PUT` / `DELETE` routes are what supersede and tombstone
+-- rows**, and that batch grants the `UPDATE` it needs -- to `fastagent_app`,
+-- with its own reasoning, in its own migration.
+--
+-- **No RLS change.** `054` already set the policy and `FORCE ROW LEVEL
+-- SECURITY`; a grant does not weaken it -- the role still sees only the tenant
+-- its session is set to. Granting and isolating are different questions and
+-- this migration answers only the first.
+
+GRANT SELECT, INSERT ON contact_memories TO fastagent_worker;
+
+INSERT INTO schema_migrations(version) VALUES ('057_contact_memories_grant')
+ON CONFLICT (version) DO NOTHING;

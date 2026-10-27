@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0.0",
+  "release": "assertion-rubric-v1",
+  "execution_state": "WAITING_FOR_STEP_5_FOUNDATIONS",
+  "input_contract": {
+    "rubric_id": "registered rubric identifier",
+    "criterion": "immutable criterion from assertion-rubric-registry.json",
+    "kind": "must or forbid",
+    "input_paths": "registered evidence values only"
+  },
+  "evaluation_protocol": {
+    "judge": "strict_semantic_contract_judge",
+    "instruction": "Decide only whether complete supplied evidence contains the registered criterion behavior. Return PRESENT only for affirmative evidence, ABSENT only when complete evidence affirmatively excludes the behavior, and UNKNOWN for missing, ambiguous, incomplete, or inaccessible evidence.",
+    "must_pass_when": {"verdict": "PRESENT"},
+    "forbid_pass_when": {"verdict": "ABSENT"},
+    "fail_when": {
+      "verdict": "UNKNOWN",
+      "evidence_states": ["missing", "ambiguous", "incomplete", "inaccessible"],
+      "applies_to": ["must", "forbid"]
+    },
+    "request_response_correlation": {
+      "rule": "response.rubric_id must exactly equal request.rubric_id",
+      "mismatch_result": "FAIL"
+    },
+    "decision_table": {
+      "must": {"PRESENT": "PASS", "ABSENT": "FAIL", "UNKNOWN": "FAIL"},
+      "forbid": {"PRESENT": "FAIL", "ABSENT": "PASS", "UNKNOWN": "FAIL"}
+    },
+    "unknown_or_invalid_result": "FAIL"
+  },
+  "output_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["rubric_id", "verdict"],
+    "properties": {
+      "rubric_id": {"type": "string"},
+      "verdict": {"enum": ["PRESENT", "ABSENT", "UNKNOWN"]}
+    }
+  },
+  "runner_boundary": "This freezes assertion meaning only; it does not authorize or implement replay before step 5."
+}

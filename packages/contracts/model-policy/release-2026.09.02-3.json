@@ -1,0 +1,154 @@
+{
+  "schema_version": "1.0.0",
+  "release_id": "9d4e1f77-53c8-4a06-9c1b-8e2f7a5b0d64",
+  "version": "2026.09.02-3",
+  "issued_at": "2026-09-02T16:00:00Z",
+  "status": "superseded",
+  "envelope_deadline_ms": 30000,
+  "roles": {
+    "UNDERSTAND_VALUE": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 6000,
+      "fallback": [],
+      "failure_action": "clarify",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "用户 2026-09-02 裁决 A1：四个实时 tier 统一绑定对话模型，以参数区分档位。裁决指名 deepseek-chat；2026-09-02 实测该别名在本账号解析为 deepseek-v4-flash，故绑定具体 model id 以免别名漂移。",
+      "max_output_tokens": 1024,
+      "requested_alias": "deepseek-chat",
+      "temperature": 0.2
+    },
+    "PLAN_CAPABILITY": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "manual_review",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "用户 2026-09-02 裁决 A1：四个实时 tier 统一绑定对话模型，以参数区分档位。裁决指名 deepseek-chat；2026-09-02 实测该别名在本账号解析为 deepseek-v4-flash，故绑定具体 model id 以免别名漂移。",
+      "max_output_tokens": 2048,
+      "requested_alias": "deepseek-chat",
+      "temperature": 0.0
+    },
+    "GENERATE_VALUE": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "clarify",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "用户 2026-09-02 裁决 A1：四个实时 tier 统一绑定对话模型，以参数区分档位。裁决指名 deepseek-chat；2026-09-02 实测该别名在本账号解析为 deepseek-v4-flash，故绑定具体 model id 以免别名漂移。",
+      "max_output_tokens": 1024,
+      "requested_alias": "deepseek-chat",
+      "temperature": 0.7
+    },
+    "COMMITMENT_CAPABILITY": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 6000,
+      "fallback": [],
+      "failure_action": "manual_review",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "用户 2026-09-02 裁决 A1：四个实时 tier 统一绑定对话模型，以参数区分档位。裁决指名 deepseek-chat；2026-09-02 实测该别名在本账号解析为 deepseek-v4-flash，故绑定具体 model id 以免别名漂移。",
+      "max_output_tokens": 768,
+      "requested_alias": "deepseek-chat",
+      "temperature": 0.0
+    },
+    "VISION": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash-vision-exp",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": null,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "no_message",
+      "price_cny_per_million_tokens": {
+        "input": null,
+        "output": null
+      },
+      "provenance": "沿用 v1 现状，待 M1a 实测后重估；不可用时降级为纯文本处理，不改 intent",
+      "max_output_tokens": 1024,
+      "temperature": 0.7,
+      "requested_alias": null
+    }
+  },
+  "embedding": {
+    "provider_id": "volcengine-ark",
+    "model_id": "doubao-embedding-vision-251215",
+    "api_base": "https://ark.cn-beijing.volces.com/api/v3",
+    "region": "cn-beijing",
+    "dimension": 1024,
+    "distance_metric": "cosine",
+    "normalization": "l2",
+    "truncation_policy": "reject-over-limit"
+  },
+  "ceilings_cny": {
+    "soft_daily": 20,
+    "hard_daily": 50,
+    "soft_monthly": 300,
+    "hard_monthly": 600,
+    "provenance": "占位，待实测调整（用户 2026-09-01 给出，非按重估方法算出的结论）"
+  },
+  "unverified_fields": [
+    {
+      "path": "credential.owner",
+      "reason": "当前复用已停止的 Astock 项目 key，与其共享账号。验证条件：为 v2 单独开一把 key 并记录 owner 与限流档位。"
+    },
+    {
+      "path": "roles.*.price_cny_per_million_tokens",
+      "reason": "缺合同价或当时公开价截图，人民币记账只能记 NULL、ceiling 无法启用。验证条件：用户提供输入/输出/缓存命中三档单价及生效日。"
+    },
+    {
+      "path": "roles.*.context_limit_tokens",
+      "reason": "未经账号侧文档或响应头确认。验证条件：供应商文档截图或一次触发上限的实测。"
+    },
+    {
+      "path": "roles.*.fallback",
+      "reason": "兜底链为空：账号内唯一实时可用模型即当前绑定，无第二选择。验证条件：豆包 key 到位并跑通同一 replay 套件后登记备选。"
+    },
+    {
+      "path": "roles.*.structured_output.strictness",
+      "reason": "当前依赖 response_format=json_object，未使用严格 function calling。验证条件：adapter 支持 tools/tool_choice 后重测规划档。"
+    },
+    {
+      "path": "replay.sample_size",
+      "reason": "现有观测仅为每角色 1 次、单一 fixture 的探针，不构成 token 分布。验证条件：脱敏 replay 套件跑出每角色 P50/P95。"
+    }
+  ],
+  "provenance": "四个实时 tier 由同一对话模型服务，以 temperature 与 max_output_tokens 区分档位——这仍不是「已按档位分离」，只是参数分离。deepseek-v4-pro 经 2026-09-02 实测在本项目的结构化输出用法下 finish_reason=length、可见正文为空，且延迟 22-28s 超出角色 deadline，因此移出实时链路，登记为离线角色候选，暂不绑定任何执行点。"
+}

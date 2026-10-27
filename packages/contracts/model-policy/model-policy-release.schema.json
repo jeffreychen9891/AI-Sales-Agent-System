@@ -1,0 +1,442 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.invalid/contracts/model-policy/model-policy-release.schema.json",
+  "title": "ModelPolicyRelease",
+  "description": "Immutable binding of logical tiers to concrete models. A logical tier is not a drifting alias: switching a model requires a new release, not an edit to this one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "release_id",
+    "version",
+    "issued_at",
+    "status",
+    "envelope_deadline_ms",
+    "roles",
+    "embedding",
+    "ceilings_cny",
+    "unverified_fields",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": ["1.0.0", "1.1.0"]
+    },
+    "release_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]{4}[.][0-9]{2}[.][0-9]{2}-[0-9]+$"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "active",
+        "superseded"
+      ]
+    },
+    "envelope_deadline_ms": {
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 120000
+    },
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UNDERSTAND_VALUE",
+        "PLAN_CAPABILITY",
+        "GENERATE_VALUE",
+        "COMMITMENT_CAPABILITY",
+        "VISION"
+      ],
+      "properties": {
+        "UNDERSTAND_VALUE": {
+          "$ref": "#/$defs/roleBinding"
+        },
+        "PLAN_CAPABILITY": {
+          "$ref": "#/$defs/roleBinding"
+        },
+        "GENERATE_VALUE": {
+          "$ref": "#/$defs/roleBinding"
+        },
+        "COMMITMENT_CAPABILITY": {
+          "$ref": "#/$defs/roleBinding"
+        },
+        "VISION": {
+          "$ref": "#/$defs/roleBinding"
+        },
+        "SILENCE_CAPABILITY": {
+          "$ref": "#/$defs/roleBinding",
+          "description": "第四步的绑定（ADR-0149）。**刻意不在 `required` 里**，而另外五个在。\n\n理由是追溯收紧：把它设成必填，`release-2026.09.02-1` 到 `-7` 这七份**发布时合法的**文件会一起变成非法，而 `active_release()` 会把目录里每一份都读进来校验。本仓为这个形状写过纪律（T338 / T349：不对已存数据做追溯收紧；`registry.py` 那条「refusing at runtime would turn a profile published before 11d into a 500 every turn」是同一件事）。\n\n**而「在架那一份必须有它」另有执行者**，不靠这里：`model_policy` 的实时档校验对 `REALTIME_TIERS` 逐个取 `release.role(tier)`，缺了就抛 `ModelPolicyError` 并点名是哪个角色。**一条针对在架件的断言，好过一次针对历史件的追溯收紧。**"
+        }
+      }
+    },
+    "embedding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_id",
+        "model_id",
+        "api_base",
+        "region",
+        "dimension",
+        "distance_metric",
+        "normalization",
+        "truncation_policy"
+      ],
+      "properties": {
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "model_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "api_base": {
+          "type": "string",
+          "format": "uri"
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "dimension": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "distance_metric": {
+          "enum": [
+            "cosine",
+            "l2",
+            "inner_product"
+          ]
+        },
+        "normalization": {
+          "enum": [
+            "none",
+            "l2"
+          ]
+        },
+        "truncation_policy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "pricing": {
+          "$ref": "#/$defs/embeddingPricing"
+        },
+        "credential_status": {
+          "enum": ["pending_supply", "provided_pending_verification", "verified"]
+        }
+      }
+    },
+    "ceilings_cny": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "soft_daily",
+        "hard_daily",
+        "soft_monthly",
+        "hard_monthly",
+        "provenance"
+      ],
+      "properties": {
+        "soft_daily": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "hard_daily": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "soft_monthly": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "hard_monthly": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "provenance": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "enforcement_active": {
+          "type": "boolean"
+        },
+        "soft_conversation": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "hard_conversation": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "estimated_ceiling_factor": {
+          "$comment": "ADR-0036. How far above a hard ceiling the estimate has to reach before it denies; that denial is a concurrency guard, not a cost judgement. Absent means the code default (9), which is fitted to a single measured call and is explicitly not calibrated.",
+          "type": "number",
+          "minimum": 1
+        },
+        "max_unsettled_calls_conversation": {
+          "$comment": "ADR-0036 count gate. A conversation is processed serially, so its steady state is one unsettled row; a backlog means settlement stopped, not that the budget ran out.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_unsettled_calls_daily": {
+          "$comment": "ADR-0036 count gate, per tenant-day.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "unverified_fields": {
+      "description": "Dotted paths whose value has not been confirmed against a real account. A release with a non-empty list may be loaded, but may not be used to serve Stage or Production traffic.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "reason"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    }
+  },
+  "$defs": {
+    "roleBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_id",
+        "model_id",
+        "api_base",
+        "api_compatibility",
+        "structured_output",
+        "region",
+        "context_limit_tokens",
+        "deadline_ms",
+        "fallback",
+        "failure_action",
+        "price_cny_per_million_tokens",
+        "provenance"
+      ],
+      "properties": {
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "model_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "api_base": {
+          "type": "string",
+          "format": "uri"
+        },
+        "api_compatibility": {
+          "enum": [
+            "openai-chat-completions-v1",
+            "openai-responses-v1"
+          ]
+        },
+        "structured_output": {
+          "enum": [
+            "json_object",
+            "json_schema",
+            "none"
+          ]
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "context_limit_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "deadline_ms": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 60000
+        },
+        "fallback": {
+          "description": "Ordered fallback bindings. An empty list means there is no fallback: on failure the role takes failure_action.",
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "provider_id",
+              "model_id"
+            ],
+            "properties": {
+              "provider_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "model_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            }
+          }
+        },
+        "failure_action": {
+          "enum": [
+            "clarify",
+            "no_message",
+            "handoff",
+            "manual_review"
+          ]
+        },
+        "price_cny_per_million_tokens": {
+          "oneOf": [
+            {"$ref": "#/$defs/legacyPricing"},
+            {"$ref": "#/$defs/timeOfUsePricing"}
+          ]
+        },
+        "provenance": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "max_output_tokens": {
+          "description": "Upper bound sent as max_tokens and used as the pre-call output estimate. Absent means the cost pre-check cannot bound the call, which disables hard-ceiling enforcement rather than guessing.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "temperature": {
+          "description": "Sampling temperature sent with the request. Tiers are differentiated by parameters, not by separate models, while one model serves them all.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 2
+        },
+        "requested_alias": {
+          "description": "Alias named by the ruling that produced this binding, kept for provenance. The binding itself always names the concrete model the alias resolved to, because an alias can be repointed by the provider.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128
+        },
+        "thinking_mode": {
+          "enum": ["disabled", "enabled"]
+        },
+        "output_contract": {
+          "enum": [
+            "understanding-result",
+            "plan-result",
+            "generation-result",
+            "silence-reading-result"
+          ]
+        }
+      }
+    },
+    "legacyPricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "output"],
+      "properties": {
+        "input": {"type": ["number", "null"], "minimum": 0},
+        "output": {"type": ["number", "null"], "minimum": 0},
+        "cached_input": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "periodPrice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offpeak", "peak"],
+      "properties": {
+        "offpeak": {"type": "number", "minimum": 0},
+        "peak": {"type": "number", "minimum": 0}
+      }
+    },
+    "timeOfUsePricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency", "unit_tokens", "effective_from", "timezone", "peak_periods", "input_cached", "input_uncached", "output", "source_url"],
+      "properties": {
+        "currency": {"const": "CNY"},
+        "unit_tokens": {"const": 1000000},
+        "effective_from": {"type": "string", "format": "date-time"},
+        "timezone": {"const": "Asia/Shanghai"},
+        "peak_periods": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["weekdays", "start", "end"],
+            "properties": {
+              "weekdays": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 7}, "uniqueItems": true},
+              "start": {"type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$"},
+              "end": {"type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$"}
+            }
+          }
+        },
+        "input_cached": {"$ref": "#/$defs/periodPrice"},
+        "input_uncached": {"$ref": "#/$defs/periodPrice"},
+        "output": {"$ref": "#/$defs/periodPrice"},
+        "source_url": {"type": "string", "format": "uri"}
+      }
+    },
+    "embeddingPricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency", "unit_tokens", "text_input", "image_input", "image_token_formula", "source"],
+      "properties": {
+        "currency": {"const": "CNY"},
+        "unit_tokens": {"const": 1000000},
+        "text_input": {"type": "number", "minimum": 0},
+        "image_input": {"type": "number", "minimum": 0},
+        "image_token_formula": {"type": "string", "minLength": 1, "maxLength": 100},
+        "source": {"type": "string", "minLength": 1, "maxLength": 200}
+      }
+    }
+  }
+}

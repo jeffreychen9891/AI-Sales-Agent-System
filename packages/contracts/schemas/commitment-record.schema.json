@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/commitment-record.schema.json",
+  "title": "CommitmentRecord",
+  "description": "承诺台账的一行（`docs/rfcs/conversation-engine.md` §5）。**十三个字段，一个不多一个不少**，三个枚举逐字抄自图纸 —— 两者由 `tests/contracts/test_commitment_record_contract.py` 按**等值集合**钉住，任意一侧改一个名字都会红。**本批（11a）只有这份形状：没有表、没有写入方、没有读出方**；表是 11b（迁移 063），写入方是 11c（ADR-0139 裁定的 policy hook）。`COMMITMENT_LEDGER_AVAILABLE` 仍然是 `False`，`test_commitment_ledger_absence` 仍然在守它与迁移目录说的是同一件事。**本文件里的引用一律给 §号与字段名，不给行号** —— 行号只出现在那份用例里，因为那里的每一个行号都会被真的读一次；写在散文里的行号没有人替它重跑，而本仓两天里为此付过三次账。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "tenant_id",
+    "conversation_id",
+    "party",
+    "type",
+    "summary",
+    "source_event_id",
+    "due_at",
+    "status",
+    "evidence_refs",
+    "scheduled_event_id",
+    "generation",
+    "version"
+  ],
+  "properties": {
+    "id": {"type": "string", "format": "uuid"},
+    "tenant_id": {"type": "string", "format": "uuid"},
+    "conversation_id": {"type": "string", "format": "uuid"},
+    "party": {
+      "enum": ["ai", "customer", "employee", "external"],
+      "description": "谁许下的。**`customer` 与 `ai` 各有一条规则，而两条不对称**（§5 那两条 `party=` 开头的）：`customer` 的候选由理解步提取、**policy 确认后才入账**（ADR-0139 选定 policy 而不是 planner —— planner 的 `scheduled_event_changes` 验完就丢，生产者是 `time_rules.py`）；`ai` 的未来动作**必须建账**。`employee` / `external` 今天没有规则，留在词表里是因为图纸给的是四值 —— **少抄一个就是悄悄改了图纸**。"
+    },
+    "type": {
+      "enum": [
+        "quote_or_calculate",
+        "lookup_or_verify",
+        "apply_price_or_discount",
+        "send_material",
+        "contact_or_ask_human",
+        "provide_information",
+        "take_action"
+      ],
+      "description": "承诺的种类，**七类**。它与 `IntentRecord.kind` 那十二个**不是一回事**：那边是「平台要执行的动作」，这边是「我们答应了什么」——`send_material` 两边同名而语义不同（那边是发一份素材这个动作，这边是答应过要发）。"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "这条承诺的一句话。**上界 500，与写入侧对齐** —— `understanding-result.schema.json` 的 `customer_commitments[].summary` 就是 500，而 ADR-0139 裁定的写入路径正是从那里取值。两个数相等由 `test_the_summary_bound_matches_the_side_that_writes_it` 钉住，**不是巧合、也不是抄的**。"
+    },
+    "source_event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "承诺是在哪一条事件上被说出来的。**与 `evidence_refs` 不是一回事**：这一个是「哪一轮」，那一组是「凭哪些话」。"
+    },
+    "due_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "到期时刻，**没有明确时间就是 `null`，不许猜**（§5 `party=customer` 那条逐字：「不能私自猜到期日」；理解步的提示词已经这么要求模型了 —— `inference_model.py` 的 `_UNDERSTAND_SYSTEM` 里那句 `Never infer a due date that was not said`）。**`null` 与缺席不是两种写法**：本契约把它列进 `required`，所以「没有到期日」只能写成 `null`，一个漏掉这个键的写入方会被拒、而不是被当成没到期日。这与 `outcome_ref` 那一格是同一个教训（批 3：说清这是哪一种 null）。"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "active",
+        "fulfilled",
+        "overdue",
+        "withdrawn",
+        "superseded",
+        "remedy_running",
+        "escalated",
+        "fail_open"
+      ],
+      "description": "九态。**小写，与 `IntentRecord.status` 的大写九态不同族** —— 两边都是九个纯属巧合，名字一个都不重。到期未兑现只能走 `remedy_running` / `escalated` / `withdrawn`（§5 `party=ai` 那条：不能假称已完成），而 `fail_open` 是分类器故障那一支，**它存在本身就是一条要被观测的事**。"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {"type": "string", "format": "uuid"},
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "description": "支撑这条承诺的事件 id。**`minItems` 是 1**：一条没有证据的承诺正是图纸禁止的东西（§5 最后一条：「证据不足时转人工，不 silent fail-open」）。**`maxItems` 8 与 `conversation-aggregate` 的 `evidence_event_ids` 同一个数、同一个单位**（支撑同一件事的若干条消息）。**图纸写的是 `[typed ref]`，这里取的是 uuid 数组**：本仓四处兄弟字段（`annotation_refs` / `active_intent_refs` / `scheduled_event_refs` / `IntentRecord.policy_evidence`）全是 uuid 数组，而 ADR-0139 裁定的写入方手里拿的正是 `evidence_event_id`。**若 11c 接写入方时发现要区分事件 id 与内容引用，那是 11c 的一次裁定**，不是在这里默默放宽。"
+    },
+    "scheduled_event_id": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "这条承诺排出去的那个定时事件，没排就是 `null`。**它是 `scheduled_events.commitment_id` 的反向**（`001_m0.sql` 里那根没有 `REFERENCES` 的列），而那根列接外键是 **11d，不是本批** —— 外键一旦有数据在下面就不可逆，所以 ADR-0139 把它挪到了最后一格。"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "写下这条承诺时会话的 `generation`，口径与 `conversation-aggregate.generation` 相同。"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "这一行自己的乐观锁版本，口径与 `conversation-aggregate.state_version` 相同（`minimum: 0`）。**改期要 CAS**（§5 「客户新消息若直接履约」那条），而 CAS 要有一个可比的数 —— 就是它。"
+    }
+  }
+}

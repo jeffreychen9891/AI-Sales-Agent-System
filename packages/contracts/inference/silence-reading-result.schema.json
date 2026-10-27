@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.invalid/contracts/inference/silence-reading-result.schema.json",
+  "title": "SilenceReadingResult",
+  "description": "主动打破静默之前的那一步（ADR-0149）。**只在定时器触发的轮次跑**，客户消息那一轮一次都不调。\n\n**它存在的理由**：2026-09-22 stage 实测，`goal_stall` 在第 1 条发出后 6 秒触发，那一轮把第 1 条拆成两句重说了一遍。而模型没有偷懒 —— 定时器轮次照常调理解步，提示词里也写着 `event_type: \"timer\"`，**问题是它被要求填的每一格都是「客户刚说了什么」**。客户没说话，格子只能空着，它诚实地答「nothing new was learned」，计划步拿着空答案只能复述刚讲过的话。**那是对一个问错了的问题给出的正确答案。**\n\n**这份契约把那一轮的问题换掉**：不问「客户说了什么」，问「**他为什么不说话，这时候做什么有用**」。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "reading",
+    "action",
+    "model_evidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "description": "平台写的，不抄模型的（与另外三份推理契约同一条纪律）。"
+    },
+    "reading": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "description": "**他为什么不说话 —— 模型自己的判断，自由文本。**\n\n⚠️ **这里刻意不是封闭词表**，而那是一条裁定：用户 2026-09-22「让模型发挥，**情况穷尽不完**」。作者提过一张词表（在比价 / 在内部讨论 / 没看懂 / 时机不对 …），被否掉，理由是今天写出来的那张表下一个行业就不够用。\n\n**自由的是判断，不是动作** —— 见 `action`：那一半必须落在平台会做的事情上，否则是一条没有消费方的建议（本仓「数据生产了，全仓无人消费」那一族）。\n\n**`maxLength` 300**：它进计划步的提示词，**而这一步只在主动轮次跑，所以这笔字节不落在每一个回合上**。300 汉字满载 **904 线路字节**，占 `MAX_MODEL_INPUT_BYTES`（49,000）的 **1.84%**（`prompt_bytes.text_cost` 实测，基线 `ea089f23`）。取 300 而不是 120（`information_slots[].description` 那个数）是因为两者性质不同：那一个是一句定义，这一个要说清一段处境。**重议条件：真实主动轮次里出现过被这个界截断的 reading。**"
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "do",
+        "because"
+      ],
+      "allOf": [
+        {
+          "description": "**`send_material` 必须点名一份** —— 在契约层拦，不留到运行期。\n\n没有这一条的话，`{\"do\": \"send_material\", \"material_ref\": null}` 是一份**合法**文档，而它要到素材那一层才失败 —— 那时候报出来的是「找不到 ref」，读的人会去查配包里有没有那份素材，**而真正的问题是模型根本没点名**（`AGENTS.md`：一句正确的报错可以指向错误的原因）。",
+          "if": {
+            "properties": {
+              "do": {
+                "const": "send_material"
+              }
+            },
+            "required": [
+              "do"
+            ]
+          },
+          "then": {
+            "required": [
+              "material_ref"
+            ],
+            "properties": {
+              "material_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "do": {
+          "enum": [
+            "wait",
+            "ask_again",
+            "send_material",
+            "hand_to_human"
+          ],
+          "description": "**这一轮做什么 —— 平台会做的那几件，闭合。**\n\n⚠️ **为什么这一半是闭合的，而 `reading` 不是**（ADR-0149 §三）：模型自由的是**怎么读这次静默**；而**这一轮能做什么**由平台决定，因为**平台只会做它会做的那几件事**。一个平台执行不了的建议等于没有消费方。**这张表会随平台长** —— 加一个值是一次刻意的契约改动，那正是要的。\n\n* `wait` —— **不发**。这是「没东西说就不该推进」那条裁定的落点（用户 2026-09-22），而它在这里是一个**取值**，不是一条独立规则：货架不空时它同样可以说「等一等」；\n* `ask_again` —— 换个问法把刚才那个问题再问一次；\n* `send_material` —— 发一份素材，**ref 写在 `material_ref` 里**；\n* `hand_to_human` —— 转人工。"
+        },
+        "material_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128,
+          "description": "`do` 是 `send_material` 时点名的那一份，否则 `null`。\n\n⚠️ **它只能从「这通对话还没发过」的里面挑** —— 平台现读 `intent_records` 算出那个集合（`_delivered_materials`），**不是信模型说没发过**。\n\n**这条约束顺带关掉了一个洞**：一旦成立，「把刚说过的话再说一遍」这条路就没有了 —— **所以不需要另做重复检测**（`REPEATED_OUTBOUND_CHARS` 那道闸实测次序是反的：同义改写重合 2 字，而素材原文重合 11 字，得分最高的恰恰是该重复的那一段）。"
+        },
+        "because": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "**这么做怎么服务当前帧的目标 —— 一句话。**\n\n它是「**不许偏离销售目标**」那条裁定（用户 2026-09-22）在契约上的落点：这一步的输入里带当前帧的 `goal`（**商家自己写的那段**，平台不替他定），而这一格要求模型把动作与那个目标连起来说一句。\n\n**它不是唯一的执行者，也不该是** —— 产出进计划步之后，`advance_goal` / `propose_followup` 本来就带 `current_goal_only`。这一格的作用是让「为什么是这个动作」在审计里读得到。\n\n`maxLength` 120，与 `information_slots[].description` 同一个数：两者都是「一句话说清一件事」。"
+        }
+      }
+    },
+    "model_evidence": {
+      "$ref": "https://fastagent.invalid/contracts/inference/model-evidence.schema.json"
+    }
+  }
+}

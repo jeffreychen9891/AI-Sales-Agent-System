@@ -1,0 +1,39 @@
+{
+  "code": 0,
+  "data": [
+    {
+      "TenantId": 0,
+      "base64RawData": "Cg4IAxIKCghb6KOC5byAXQ==",
+      "cmd": 15000,
+      "customParam": "v2-stage-01",
+      "fromRoomId": "<id-01>",
+      "guid": "D05FCC41-9740-4932-81A4-6A54E8836AFF",
+      "isRoomNotice": "<id-01>",
+      "msgData": {
+        "atList": [],
+        "content": "[裂开]",
+        "extras": null,
+        "moreDetail": [
+          {
+            "subtype": 3,
+            "text": "[裂开]"
+          }
+        ],
+        "reply": {}
+      },
+      "msgFlag": 16777216,
+      "msgServerId": 1000849,
+      "msgType": 2,
+      "msgUniqueIdentifier": "4034619628990168508",
+      "receiverId": "<id-02>",
+      "referId": 0,
+      "requestId": "42a8b2a3bdc1f624a9d7cb9dbcf8a0db",
+      "senderId": "<id-03>",
+      "senderName": "",
+      "seq": 17350620,
+      "timestamp": 1789003348,
+      "userId": "<id-02>"
+    }
+  ],
+  "msg": "ok"
+}

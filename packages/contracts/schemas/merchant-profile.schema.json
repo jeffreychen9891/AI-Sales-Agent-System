@@ -1,0 +1,756 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/merchant-profile.schema.json",
+  "title": "MerchantProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity",
+    "target_frames",
+    "strategies",
+    "proactivity_policy",
+    "knowledge_bindings",
+    "policy_bindings",
+    "outcome_rules",
+    "annotation_taxonomy",
+    "confidence_gate_policy_ref",
+    "manipulation_context_refs",
+    "assist_policy",
+    "golden_manifest"
+  ],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_id",
+        "release_id",
+        "version",
+        "content_hash"
+      ],
+      "properties": {
+        "profile_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{2,63}$"
+        },
+        "release_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "target_frames": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 63,
+      "description": "**上界 63 是算出来的，不是挑的**：`conversation_aggregate.frames_entered` 的 `maxItems` 是 64，而平台自己的帧（`platform:` 前缀，今天一个 `platform:no_goal`）也会进那张表。所以 `63 = 64 - len(PLATFORM_FRAME_DEFINITIONS)`，`test_a_list_the_customer_can_overflow.py` 按这条算式核 —— **新加一个平台帧而不下调这一格，它就红**。 ⚠️ **为什么这一格承重**：有了它，「一通对话进过的不同帧」永远不会超过 64，于是 `target_stack._index_to_forget` 到顶让位时**总能找到一笔重复的记录去丢**，「进过没有」这个答案一个都不丢。没有它，到顶时只能丢一个唯一的帧，而那正是 `FRAME_ALREADY_ENTERED` 与平台推进防循环两道闸读的东西。 今天三个配包分别是 5 / 3 / 3 条，离这个上界很远。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "goal",
+          "exit_conditions",
+          "information_slots",
+          "allowed_strategy_set",
+          "content_materials",
+          "time_rules",
+          "return_confirmation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "goal": {
+            "type": "string",
+            "maxLength": 1500,
+            "description": "What this frame is for, in the merchant's own words. It is sent verbatim to the model -- **in two of the three requests (understand and plan), so every turn pays for it twice**. `maxLength` is 1,500, and **it has to be the same number as `conversation-aggregate`'s `target_stack[].goal`** -- the two are one fact copied twice (the aggregate copies this string verbatim), pinned equal by `tests/contracts/test_the_goal_bound_is_one_number.py`. **This is the source copy**: bounding only `conversation-aggregate` would let admission accept an oversized package and fail later, when a frame is written. **The 2026-09-20 raise below produced the mirror image of exactly that, by moving this half alone** -- see the correction at the end of this description. 2026-09-15 also removed a topic list from this field in the demo package (see `material_topic_slot`) -- **prose that duplicates machine-readable data is paid for twice per turn and drifts**. **2026-09-20: 1,200 -> 1,500 (user's ruling).** The demo goal had reached 1,099 of a 1,100 guard and four rulings arrived in one sitting that each needed a sentence; every cut left had stopped being padding and started being a rule. The guard moved to 1,400 so the two layers keep their distance -- the guard is meant to go red one rule before the contract does. **The cost is unchanged in kind and larger in size**: each of the 200 extra characters is paid twice per turn, in the understand and plan requests. **Correction, 2026-09-22 (user's confirmation)**: that raise moved this half only. `conversation-aggregate` stayed at 1,200, so from the frame-split batch (`3d04ebf7`) onward the demo `introduce` goal (1,304 chars) passed admission here and then raised `ValidationError` at `pipeline.py`'s `validate_contract` on every new conversation -- while the gate stayed green at 3,925, because no test ever fed a shipped package to `_initial_aggregate`. Both halves are 1,500 now, and the pinning test named above is what makes the next raise fail loudly instead of silently."
+          },
+          "exit_conditions": {
+            "type": "array",
+            "minItems": 1,
+            "description": "这个帧「什么时候算完」的判据，**由 complete 那道闸执行**（2026-09-24 批，用户裁定「建执行」）。在此之前它零执行者：闸核的是另一套（information_slots.required 全满），两套在 carrier 包上双向分家 ——商家说「记下归还状态就完」而闸要求四个 required 槽全满。今天起两套各归各：**required = 要收集什么**（ask 链 / STRATEGY_SKIPS_REQUIRED_SLOT 读它），**exit_conditions = 什么时候算完**（complete 闸读它）。谓词是闭合的两种：{slot, present: true}（槽有值）与 {slot, equals: 值}（槽等于某值），slot 必须是本帧 information_slots 之一（封版校验，死锁检查同族）。minItems 1：空数组 = 模型随时可收口，RFC §4.1 明令禁止「模型觉得完成了」作为唯一条件。",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "slot"
+              ],
+              "properties": {
+                "slot": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "present": {
+                  "const": true
+                },
+                "equals": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              }
+            }
+          },
+          "information_slots": {
+            "description": "The frame's typed slot definitions — conversation-engine.md §4.1 目标帧规则: 「`information_slots` 有类型、来源、置信阈值、过期规则和证据 ID」. **Typed since 2026-09-15 (D2); it was a bare `{\"type\": \"object\"}` before, which ADR-0032 named and T28 registered.** All three keys are required because all 17 slots across the shipped packages already carry them, and because the model is *told* each slot's name, type and requiredness (`runtime.request_shape` puts them in `slots_wanted`): a slot whose type is absent or misspelled reaches the model as a type it has to guess at, and guessing produces a plausible-looking value in the wrong shape -- **the silent-wrong-answer direction this repository refuses to leave unguarded**.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "type",
+                "required",
+                "description"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "type": {
+                  "enum": [
+                    "string",
+                    "boolean",
+                    "money",
+                    "date"
+                  ],
+                  "description": "**A closed vocabulary, and it is today's four** (`string` x9, `boolean` x6, `money` x1, `date` x1 across the shipped packages). Closed rather than a bounded free string because the value is sent to the model and nothing else interprets it: an open string would let a typo (`\"bool\"`) through admission and reach the model as a type it does not know. **Adding a fifth is a deliberate contract change, which is the point** -- a new slot type changes what the model is asked to produce."
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120,
+                  "description": "What this slot means, in the merchant's own words -- **one line, and it is sent to the model** as part of `slots_wanted` (`runtime.request_shape`). ADR-0144 decision 3: before this key a slot reached the model as a name and a type and nothing else, so `deposit_amount` was a word the model had to guess the meaning of. The schema-guided dialogue line of work (SGD, arXiv:1909.05855) is exactly this: a natural-language description per slot lets a model fill slots it has never seen. **Required, not optional**: a slot with no description is the silent-wrong direction this repository refuses to leave open -- it fills, it validates, it persists, and only the value is wrong. **`maxLength` 120 because it is paid twice per turn**: `slots_wanted` goes into the understand and plan requests, the same path as `goal`. Today's longest shipped description is 37 characters. **Behavioural rules do not belong here** (user's ruling 2026-09-21): 'fill only one of the allowed values', 'do not ask just to fill it' and their kind stay in `goal`. This key answers *what the slot is*, not *what to do about it*."
+                },
+                "on_revisit": {
+                  "enum": [
+                    "reset",
+                    "carry"
+                  ],
+                  "description": "**他又进了一次这个帧，上一次填的这个值还算不算数**（ADR-0150）。缺省 `reset` —— **那是今天的行为**，三个在架配包一行不用改。 `reset`：重进时这一格是空的。异议帧的 `concern_answered`（「他提的那一条我们已经正面回答过了」）就是这一种 —— **第二条疑虑当然要重新答**。 `carry`：重进时把上一次的值**连证据一起**种回来（`conversation_aggregate.carried_slots`）。报价帧的 `price_quoted`（「已经报过的那个数与口径」）是这一种 —— 用户 2026-09-22：「**有些销售场景需要反复报价**」，而「**要取到什么信息……难道还要重复一遍？**」 ⚠️ **这一格是槽级的，不是帧级的，两者不能合成一条**：`quote` 一个帧里两种槽都有 —— `price_quoted` 该带过去，而 `price_feedback`（他**这次**对价格的反应）必须重置。帧级的那一格是 `revisit`，它答的是「要不要再进这个帧」。 ⚠️ **带过去的值算数** —— 出口条件就此满足，于是一个出口条件全被带满的帧，第二次进去会很快完成并弹回主线。**那正是「答一句就回去」**，而不是把整个流程重走一遍。ADR-0150 §四逐字记了被否掉的另一条路（只进提示词、不算出口条件）：那样二次进入 `quote` 仍然必须重填 `price_quoted`，**也就是仍然再报一次价**。 ⚠️ **不管过期。** `information_slots` 那句「过期规则」是另一格，今天没有任何配包声明过它 —— 一个带过去的报价三天后还算不算数，是商家的判断，**而零实现的概念不能作为本条的一部分**（`CLAUDE.md` 第四节）。"
+                },
+                "filled_by_delivery": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "description": "**这一格由平台自己的投递记录填，不等模型报**（运维缺陷 18，2026-09-23）。值是一条素材 ref；那条素材真的发出去之后（`intent_records` 里离开过 `APPROVED`，`pipeline._delivered_materials`），`target_stack.record_delivered_slots` 把这个槽写成**那条素材的原文**，`slot_evidence.source` 记 `platform`。 **它修的是什么**：`quote` 帧的 `exit_conditions` 只有一条 `{\"slot\": \"price_quoted\", \"present\": true}`，而 `price_quoted` 是**模型自填的**。stage 2026-09-23 实测：`material:demo-price-plain:v1` 在 03:14:17 真的发给了客户，而 `price_quoted` 始终是空的 —— **「报过价」这件事在对话里发生了，在状态里没有发生**。 ⚠️ **同一件事先前有两个定义点**：`advance_when[].delivered` 读平台记录，`exit_conditions[].slot` 读模型自填的槽。本仓反复踩的那一族 —— 两处先后分家而没有东西变红。这一格让权威的那份也能落到槽上。 ⚠️ **ref 必须在同一个帧的 `content_materials` 里声明**（封版时检，`_check_every_delivery_filled_slot_is_declared`）—— 一条本帧发不出去的 ref 写在这里，是一个**永远填不上的必填槽**：包封得出、对话跑得动、那一帧出不去，而没有任何东西变红。 ⚠️ **只对 `type: \"string\"` 的槽有意义**，因为写进去的是素材原文。 **缺省不声明 —— 那是今天的行为**，在架配包里除了 `price_quoted` 一个都不用改。"
+                }
+              }
+            }
+          },
+          "allowed_strategy_set": {
+            "description": "What the model may choose on an ordinary turn in this frame. Since ADR-0116 it is no longer also the constraint on `time_rules[].strategy`: see `time_rule_strategy_set`.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "time_rule_strategy_set": {
+            "description": "What this frame's `time_rules` may declare as their `strategy`. **Optional, and omitting it means `allowed_strategy_set`** -- so a profile that does not declare it behaves exactly as it did before ADR-0116. It exists because one list was answering two questions that only diverge once `strategy` has a reader (B4-4): a follow-up play a rule wants at the 24-hour mark is not necessarily a play the model should be offered when the customer just asked something. Registration in `strategies` is still required either way; this widens which frame may use a play, never whether the profile knows it.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "content_materials": {
+            "description": "The materials this frame may use. An item is either a bare ref -- the shape every profile used before availability existed, read as 'declared without restriction, offered on every turn' -- or an object that says when it may be used. `proactive`: ordinary turns only. `on_request`: ordinary turns, and only when one of its `topics` appears in the value of the slot named by this frame's `material_topic_slot`; an `on_request` material declaring no topics is ungated and is the deliberate safety valve, because the failure direction of a topic gate is that the model answers from its own words instead. `timer`: only on a turn produced by a scheduled event whose kind is in `emit_kinds`, and never on an ordinary turn -- the same split ADR-0116 made between `allowed_strategy_set` and `time_rule_strategy_set`, for the same reason. The selection itself is `worker/material_selection.py`; profiles/registry.py refuses the combinations JSON Schema cannot express (topics with no topic slot, timer with no emit_kinds, an emit_kind no rule of this frame emits).",
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ref"
+                  ],
+                  "properties": {
+                    "ref": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "availability": {
+                      "enum": [
+                        "proactive",
+                        "on_request",
+                        "timer",
+                        "any"
+                      ]
+                    },
+                    "topics": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "emit_kinds": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "stages": {
+                      "description": "Stage names, from this frame's material_stages, in which the material may be used. **2026-09-22 (ADR-0149): this used to read \"in which a `proactive` material may be used\", and that was accurate -- the stage filter lived inside the `proactive` branch of `_is_offered`, so `timer` and unrestricted materials were never stage-filtered at all.** That coupling left no way to declare a material that a timer turn may use *and* that still follows the stage ladder, which is what the demo package needed. Stage is \"how far the conversation has got\" and availability is \"which kind of turn\" -- two orthogonal questions, so the filter moved out and now applies to every availability. The criterion itself did not change. Omitting it means the material is not stage-restricted. The stage itself is derived by the platform from the material refs it has already sent, not asked of the model: a guessed stage selects the wrong materials and nothing goes red, which is why role and channel were refused as slots (user ruling 2026-09-11).",
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "content_assets": {
+            "description": "The files this frame may offer to send (E3, ADR-0130). **Shaped on `content_materials` but not identical, and every difference is deliberate.** (1) **There is no bare-ref form.** For a material a bare ref reads as 'declared without restriction, offered on every turn'; for a file that is an ungated offer, and ADR-0130 §二.1(b) refuses it -- the failure direction of an ungated material is that the model writes its own words, while the failure direction of an ungated file is that a wrong file reaches the customer and cannot be recalled. (2) `availability` is **required**, because there is no default that is safe. (3) `on_request` must declare `topics`: the ungated `on_request` escape valve `content_materials` deliberately keeps does **not** exist here. The gates are the frame's existing `material_topic_slot` and `material_stages` -- assets reuse them rather than inventing a parallel pair, because they are the same two gates ADR-0125 §二 defined. Selection itself is E3-5; `profiles/registry.py` refuses the combinations JSON Schema cannot express.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "ref",
+                "availability"
+              ],
+              "properties": {
+                "ref": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "availability": {
+                  "enum": [
+                    "proactive",
+                    "on_request",
+                    "timer"
+                  ]
+                },
+                "topics": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "emit_kinds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "stages": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          },
+          "material_stages": {
+            "description": "The conversation's stages for this frame, in order. Each is {name, after}, where `after` lists material refs that must already have been sent for the stage to be reached; the current stage is the last one whose refs have all gone out. Declaring none means no proactive material is stage-filtered. The stage names are the merchant's -- worker/material_selection.py never enumerates them, for the same reason it never enumerates topics. Exists because the reactive bucket has a topic gate and the proactive bucket had none: measured on a 301-segment set, that bucket is 164 segments (~53 KB) against a 16 KB hard input limit.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "after": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          },
+          "material_topic_slot": {
+            "description": "Names the information slot whose value says what the customer is currently concerned with. `on_request` materials that declare `topics` are matched against it by containment. **The containment rationale changed on 2026-09-15 and the old one is worth recording**: it used to be that the value was prose the model accumulated (the demo asked for 「已覆盖：X、Y；当前：Z」 in one slot). C-1 forbade exactly that, so today the value is one topic and containment behaves as equality; it stays containment because the platform still must not own a merchant's category vocabulary. Required as soon as any material declares `topics`; profiles/registry.py refuses the package otherwise, and refuses a name that is not one of this frame's information_slots. **规则（用户 2026-09-15 裁定）：一个话题槽的合法取值 = 有素材对应的话题。** 没有素材对应的话题，模型写进去也没有意义 —— 它不会让任何东西被给出去，只占字节。所以这个槽的取值全集**就是本帧 `content_materials[].topics` 的键集**，**不另立一张表**（另立就是同一个事实写两处，迟早分家）。**推论有两条，都要照办**：(1) 想让一个话题合法，就给它写一段素材；(2) 一个话题在 goal 里出现而键集里没有，那是**配包的缺陷**——要么补素材让它合法，要么从 goal 里拿掉，承认它不是一个话题。2026-09-15 实测过一次：本仓演示包的 goal 写了八类而键集只有七个，缺的正是 goal 要求「第一个填」的那一类（「团队的损耗」）——按 (1) 补了一段 `on_request` 素材，键集与 goal 从此逐个对得上。 **2026-09-15「裁 B」：那份名单从 goal 的散文里删掉了。** 先前它存两份（`content_materials[].topics` 一份、goal 里「只填这八类之一：…」又一份），**两份就会漂，而漂了不会有任何东西变红**（独立复核 `26ad831c` 实测：往 goal 里加第九类、不给它素材，96 条用例一条不红）。现在名单只留在素材声明里，由 `runtime.topic_vocabulary` 渲染进理解步的 `slots_wanted[].allowed_values` —— **告诉模型的集合与代码执行的集合同源**。**但推论 (2) 仍然没有执行者**：「goal 的散文里提到一个没素材的话题」今天仍然不会变红（T353）——裁 B 改的是**后果**（模型每轮收到的合法集合由素材现推，所以它不会去填那一类），**不是可检测性**。 **这条规则是 C-1（写回时不在词表里的值整条丢弃）的词表来源**，而这份 schema 不进模型请求，所以这段字是免费的。",
+            "type": "string",
+            "minLength": 1
+          },
+          "material_topic_concurrency": {
+            "description": "How many of this frame's topic buckets the slot may name at once. It exists for the byte budget: `on_request` materials are matched by *containment* against the whole slot value, so once a category has been written there it keeps matching on every later turn, and a slot the profile tells its model to accumulate matches more and more buckets as the conversation goes on. `profiles/registry.py` reserves the largest N topic buckets against `MATERIAL_BYTES_BUDGET` before checking each stage. **Omitting it reserves every topic bucket** -- the safe side, because a cap nobody declared is a cap nobody is keeping. Declaring a smaller number is the profile author stating that the frame's `goal` really does bound the accumulation; that consistency is between two pieces of prose and **nothing enforces it today** (T274). Measured on the internal demo: uncapped, a slot naming six of its seven categories puts 6,973 bytes into one turn against a 6,132 budget. **2026-09-14 (ADR-0137 follow-up, user chose reading (b)): this is a budget-accounting parameter, not a runtime cap.** The runtime never counts how many buckets match (`_is_offered` asks `any(topic in topic_text)` per material), so a frame declaring 3 can offer all 7 on a later turn. Making it a real cap first needs an answer to a product question nobody has answered -- whether offering seven topic groups at once is better or worse than three (T346); without that answer the 3 would be borrowed from a budget parameter rather than chosen. **The key is deliberately not renamed**: it is optional, so a rename would leave every already-published release silently without its declared value. And **reserving every bucket -- the safe reading -- does not fit the internal demo today**: measured with the production gate, `introduce` stage `01-开场` comes to 5,653 against 5,630, and after trimming that the tightest stage has 29 bytes left, so the honest accounting waits on the budget chain being recomputed (T345).",
+            "type": "integer",
+            "minimum": 1
+          },
+          "time_rules": {
+            "description": "RFC 6.2 `TimeRule`, tightened by M1b B4-1 (ADR-0096 §二.2 named it; ADR-0105 §零 supplied the three mappings it was missing). Six parts: id / when / emit_kind / due{anchor, offset_seconds} / dedupe_template / cancel_on, plus `strategy`. `strategy` is the sixth part added to RFC 6.2 by ADR-0105 §零 D1 -- it carries the profile author's product decision (\"follow up after 90s of silence\" vs \"hand a 3-day stall to a person\"), and deleting it would hand that decision back to the model. Before this batch the field was `{\"type\": \"object\"}`, under which three different shapes all validated.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "emit_kind",
+                "due",
+                "dedupe_template",
+                "cancel_on",
+                "strategy"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "when": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "target_active_for_seconds": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0
+                    },
+                    "no_customer_reply_for_seconds": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0
+                    },
+                    "pending_slot": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "business_event_type": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                "emit_kind": {
+                  "description": "RFC 6.1's kind table. `customer_promise_due` and `ai_commitment_due` stay declarable even though ADR-0100 moved them out of M1b: moving out means no scheduler support yet, not that a profile may no longer declare them (\"移出不是不建\").",
+                  "enum": [
+                    "silence_check",
+                    "goal_stall",
+                    "customer_promise_due",
+                    "ai_commitment_due",
+                    "followup_due",
+                    "dormant_reengagement",
+                    "business_event_followup"
+                  ]
+                },
+                "due": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "anchor",
+                    "offset_seconds"
+                  ],
+                  "properties": {
+                    "anchor": {
+                      "enum": [
+                        "frame_entered_at",
+                        "last_outbound_at",
+                        "commitment_due_at",
+                        "business_event_at"
+                      ]
+                    },
+                    "offset_seconds": {
+                      "description": "Bounded per RFC 6.2. The ceiling is 30 days: the largest rule shipped today is a 3-day `goal_stall`, and an unbounded offset is a scheduled event that never comes due.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2592000
+                    }
+                  }
+                },
+                "dedupe_template": {
+                  "description": "ADR-0105 §零 D3 ruled the minimal template `{emit_kind}:{target_frame_id}`，而 **11d 加了一段可选的第三段 `:{commitment_id}`**（用户 2026-09-16 裁定）。仍然不是自由形式——一个自由形式的模板正是两条规则安静地塌成一个键的路径。 **为什么需要第三段**：`commitment_due_at` 是**每条承诺一个时刻**，而定时器行的唯一键是 `(tenant_id, conversation_id, aggregate_generation, dedupe_key)`——同一帧里两条客户承诺渲染出同一个键，而写入方是 `ON CONFLICT ... DO UPDATE SET due_at = GREATEST(...)`：第二条不会建新行，**它把第一条的到期时间往后推**，早的那一条从此不会响。 **这一次是放宽不是收紧**：老模板原样合法，因为这份合同在读路径上验库里已存的 release（T338 / T349 同族）。要求 `commitment_due_at` 规则带上第三段的，is the shipped-profile test plus seal time —— 不是这条 pattern。",
+                  "type": "string",
+                  "pattern": "^\\{emit_kind\\}:\\{target_frame_id\\}(:\\{commitment_id\\})?$"
+                },
+                "cancel_on": {
+                  "description": "这条定时事件在哪几种情况下作废。**读之前先知道一件事：平台今天不读这一格。** 实测（2026-09-16，T358）：五个值里**四个各有一处无条件的执行者**，它们取消这条会话**全部**待发的定时事件，不看任何一条规则声明了什么 —— `customer_message` → `CUSTOMER_MESSAGE_NEW_GENERATION`（客户消息推进代次，`worker/pipeline.py`）· `frame_exit` → `TARGET_FRAME_EXITED`（同上，消费时发现目标帧已退）· `human_takeover` → `CONVERSATION_TAKEN_OVER`（`api/app.py`）· `profile_repin` → `PROFILE_RELEASE_REPINNED`（`profiles/binding.py`）。**所以少声明一个不会让它不发生，多声明一个也不会多做什么。** 那为什么还要写：它是**这条规则的作者对取消语义的记录** —— 在有人给这一格接上执行者之前，它是审计与配包评审时唯一说得清「作者以为会怎样」的东西。 **第五个值 `commitment_fulfilled` 一个执行者都没有**，而且今天没有任何东西会把一条承诺置成 `fulfilled`；声明它不会让那条催单在承诺兑现时停下来。 **不一致是已知的**（登记 T358）：处置方向是先让文字为真，再谈要不要让行为跟着声明走 —— 后者的方向是「少取消」，而一条没声明 `human_takeover` 的规则在人接管之后继续发主动消息，是本仓 Sev0/1 那一族的失败。",
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "customer_message",
+                      "human_takeover",
+                      "frame_exit",
+                      "commitment_fulfilled",
+                      "profile_repin"
+                    ]
+                  }
+                },
+                "strategy": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "return_confirmation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "policy"
+            ],
+            "properties": {
+              "policy": {
+                "enum": [
+                  "required",
+                  "optional",
+                  "forbidden"
+                ]
+              }
+            }
+          },
+          "advance_when": {
+            "description": "**平台自己把对话推进到下一个帧的条件** —— 不经模型（2026-09-21，用户裁定「要做成平台级确定性触发，这才是主动性的来源」）。 在此之前推进只有两条路：模型在计划步提一个 `push`，或者根目标完成后平台进 `closing`。前者是模型的判断（它可能不提），后者只在终局。中间那一段——「聊到这儿了，该报价了」——**没有任何确定性的东西在推**。 每一条是 `{slot, present|equals, push}`：当前活动帧的这个槽满足条件时，平台 `push` 那个帧。**按声明顺序取第一条命中的。** ⚠️ **一个目标帧一生只进一次**：判据是它的 `definition_id` 在这通对话的目标栈里**从未出现过**（含已经终结的帧）。没有这一条，`quote` 完成 pop 回主线之后条件依然成立，平台会立刻再推一次，无限循环。 ⚠️ 它与模型的 `push` 并存而不互斥：可重复的那种推进（比如客户提第二条疑虑再进一次 `objection`）仍然由模型提，**因为「一生一次」正是它不该有的约束**。",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "push"
+              ],
+              "properties": {
+                "slot": {
+                  "description": "当前活动帧的槽名。⚠️ **它是模型自填的** —— 能用 `delivered` 的地方就别用它。",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "present": {
+                  "description": "这个槽有值就算命中。与 `equals` 二选一。",
+                  "type": "boolean"
+                },
+                "equals": {
+                  "description": "这个槽等于这个值才算命中。与 `present` 二选一。",
+                  "type": "string"
+                },
+                "push": {
+                  "description": "要推进到的目标帧 `id`。**不能是平台帧**，也不能是当前这个帧。",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "delivered": {
+                  "description": "**平台自己的记录：这段话术真的发出去过。** 判据是这个 ref 出现在 `intent_records` 里已经离开 `APPROVED` 的那些 `send_message` 提案里（`pipeline._delivered_materials`），**与模型报了什么无关**。 ⚠️ **推进条件优先用它，不要用 `slot`。** 理由逐字写在 `pipeline.py` 那条注释里：`material_delivered` 是一个**模型自填的槽**，「guess wrong, select the wrong materials, and nothing goes red」——把推进挂在它上面，模型忘了填就整条链不触发、乱填就过早推进，**而两种都不会有任何东西变红**。 `slot` 那一格留给只有模型知道的东西（比如它对客户态度的判断）。",
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "revisit": {
+            "description": "**他再问起这个帧管的事，该怎么办。** 缺省 `reenter`（今天的行为，存量包不受影响）。用户 2026-09-21 裁定：「**不是所有帧都要自己的话简答，取决于帧的功能**」——所以这是一格**帧级**声明，不是一条全局规则。 `reenter` —— **再进一次这个帧**。异议帧就是这一种：他可能提好几条疑虑，每一条都要重新答一遍。 `brief_answer` —— **不重进，用自己的话简答**。报价帧就是这一种：他又问一次价，不该把整个报价流程重走一遍。模型再 `push` 它会被拒（`FRAME_ALREADY_ENTERED`）。 ⚠️ **判据是「进过没有」，而那份记录在 `conversation_aggregate.frames_entered` 上，不在目标栈上**：`request_pop` 会把子帧真的弹掉，一个正常完成并返回的帧在栈里一点痕迹都不留。 ~~⚠️ **`advance_when` 的目标帧必须是 `brief_answer`**：平台推进的条件会**持续满足**，可重进 + 条件持续满足 = 一个不会停的循环。~~ **↑ 这一条 2026-09-22 由 ADR-0150 去掉了，而去掉它的理由是：那个循环由紧跟着的另一道闸单独挡住了。** `target_stack` 平台推进那段里，`revisit` 那道判断的**下一行**就是 `if target in ever_entered: continue`，而 `advance_into_frame` 自己在结尾调 `_record_entry` —— **平台推进一次，那个帧就永久进了 `frames_entered`**，第二轮起恒为真。所以 `revisit` 那道是**多出来的一层**，而它的代价是：商家把 `quote` 写成 `reenter`（用户 2026-09-22：「有些销售场景需要反复报价」），那条 `continue` 会把 `introduce → quote` 整条推进规则跳过 —— **配包照样封得出、照样能跑、没有任何东西变红**，只是这通对话从此不会自己走到报价了。`CLAUDE.md` 第三节那一类。 **今天的行为**：`reenter` 的帧平台自动推进**只发生一次**，之后客户再问起，由模型 `push` 进来。",
+            "enum": [
+              "reenter",
+              "brief_answer"
+            ]
+          }
+        }
+      }
+    },
+    "strategies": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "required_slots": {
+            "description": "Information slots this strategy may not skip. RFC 3.6 carries this field; the gate that reads it is the post_plan STRATEGY_SKIPS_REQUIRED_SLOT check (ADR-0137 ruling 1). Distinct from information_slots[].required, which the `complete` exit gate reads -- different source, different moment, different thing being guarded.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "allowed_intent_kinds": {
+            "description": "Intent kinds a plan choosing this strategy may propose. Read by inference_validation against the platform kind catalogue.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "generation_constraints": {
+            "description": "Constraint codes handed to the generation step for this strategy.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "ai_commitment_due_within_hours": {
+            "description": "这个打法让 AI 欠下的承诺，**多少小时之内要兑现**。只对这个打法名下 `party=ai` 且 `fulfilment: ai_commitment_due` 的 `outcome_rules` 生效 —— 别的 fulfilment 没有到期时刻（`same_turn` 当轮就结，`awaiting_*` 在等别人）。**由打法声明，是用户 2026-09-19 当面裁的**：三个候选（配包顶层一个默认值 / 打法 / `outcome_rules` 加一格）里选的是打法，理由是粒度 —— 「我来安排」这一族该给长一点，「这就发您」该给短一点。**不写就用默认 1 小时**（`commitment_ledger.AI_COMMITMENT_DUE_DEFAULT_HOURS`），上限 24 小时也是同一次裁定；下面这个 `maximum` 与 `AI_COMMITMENT_DUE_MAX_HOURS` **按等值钉住** —— 一个数写两遍就要有人钉它俩相等。⚠️ **它不是「多久之后提醒」**：它定的是承诺的 `due_at`，而「到期之后多久发出那条提醒」由 `time_rules` 的 `due.offset_seconds` 定（锚点 `commitment_due_at`）。两个数两件事。",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 24
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "打法名 -> 这个打法的声明。⚠️ **`additionalProperties` 2026-09-19（T364）才收口的**，在那之前它是开的 —— 往里面塞一个拼错的键（比如 `ai_commitment_due_within_hour`，掉了一个 `s`）**能建、能封版、能跑对话，只是那个旋钮永远没生效**，而那正是 `CLAUDE.md` 第三节点名的形状。收口前先数过在架三个配包：它们只用了 `required_slots` / `allowed_intent_kinds` / `generation_constraints` 这三个，**所以收口不报废任何在架声明**。"
+    },
+    "proactivity_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active_window_seconds",
+        "reengagement_limits",
+        "quiet_hours",
+        "exit_signals",
+        "rhythm_templates"
+      ],
+      "properties": {
+        "active_window_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400
+        },
+        "reengagement_limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "window_seconds",
+            "max_delivered"
+          ],
+          "properties": {
+            "window_seconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_delivered": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "quiet_hours": {
+          "description": "Tightened by M1b B4-1 alongside `time_rules` (ADR-0096 §二.2 named both placeholders). Read it with ADR-0097: inside M1b the window is evaluated on the **tenant** timezone, not the customer's local time -- channel callbacks carry no customer timezone (ADR-0103 §四), so `timezone` here is the only input there is. RFC 6.4 keeps the customer-local wording as the form to return to once that value can be obtained.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "timezone",
+            "ranges"
+          ],
+          "properties": {
+            "timezone": {
+              "description": "IANA zone name. RFC 6.2 computes `next_allowed_at` in this zone, including the DST repeated/missing-hour rule.",
+              "type": "string",
+              "minLength": 1
+            },
+            "ranges": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "start",
+                  "end"
+                ],
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  },
+                  "end": {
+                    "description": "May be earlier than `start`: the shipped 22:30-08:00 window crosses midnight, so this is a wall-clock pair, not an ordered interval.",
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "exit_signals": {
+          "description": "Which exit signals stop proactive sending for this merchant. Tightened by M1b B4-4c from a free-form string array: the three values both shipped profiles carry named nothing the engine produces, so writing the first reader meant inventing a mapping. ADR-0115 rules that mapping and RFC 6.4 now carries it as a table. `human_takeover` is listed for correspondence, not as a switch -- refusing to act while a human holds the conversation is an engine invariant that does not depend on a profile declaring it. No release is republished: both shipped profiles already carry exactly these three values, so the contract narrows and the content does not move.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "explicit_opt_out",
+              "complaint",
+              "human_takeover"
+            ]
+          }
+        },
+        "rhythm_templates": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "knowledge_bindings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "memory_fields": {
+      "description": "Which facts about a contact this merchant wants remembered (E4, ADR-0131 M2). **The list is the merchant's, not the platform's**: a jeweller needs ring size and anniversary, an airline needs document number and cabin preference, a tutoring business needs the child's grade and lesson times -- three sets with no intersection, and the platform can never guess what the next industry needs. **What the platform owns is the ceiling, the key shape and the lifetime.** **This schema states the first two and only the *type* of the third** (independent review 2026-09-12 P2-2 corrected an earlier sentence that claimed otherwise): ~~`ttl_days` has no maximum here, and **omitting it means no expiry is declared — nothing expires a memory today**, because the batch that implements expiry is the one that will also set the ceiling and the default. Sizing that ceiling now would be picking a number with nothing measured behind it. Registered as a wiring debt with a named due batch.~~ **CORRECTED 2026-09-20 (T299 closed) — the struck sentence is what this said until expiry existed, and it is kept because a silently rewritten note costs the whole file its credibility.** **The maximum is now 365 and it is enforced here**; the two numbers were settled together by the user on 2026-09-20, because they answer two halves of one question — the cap says how long a merchant may keep a fact alive, the default says what the platform decided on the merchant's behalf when he said nothing. **Omitting `ttl_days` still means the memory never expires**, and that is now a ruling rather than an absence: it is what makes this batch change the behaviour of exactly zero shipped profiles, none of which declares `ttl_days`. **Expiry is read-time, not a sweeper**: the row stays `active` in the table and is simply not recalled, because `ttl_days` is a property of the merchant's *current* profile and `054`'s trigger makes a tombstone irreversible — see `runtime/memory_lifetime.py`, which is the one place that answers “does this memory still count”. The one write it does cause is narrow and deliberate: when a *new* value arrives for a field whose memory has expired, the expired row is superseded so it stops occupying `contact_memories_one_active_per_field_idx`. The forbidden categories (identity numbers, payment, health, religion) are a denylist enforced at admission in E4-1b, because a denylist is a rule about meaning and JSON Schema cannot read meaning. Optional: a profile that remembers nothing omits it. **The ceiling is 8 as of 2026-09-18 (E4-5, T300), down from 32, and the arithmetic is the whole of the reason**: the platform gives remembered values a fixed share of one prompt -- `runtime.memory_prompt.REMEMBERED_BYTES` = 1,200 bytes -- and one realistic entry costs about 160 of them (a value of at most 40 Chinese characters is 120 bytes, the key about 16, and the JSON around the pair 24). 1,200 / 160 is between 7 and 8. **The ceiling is deliberately not derived from the provable worst case**: E4-1b had a gate that was, and the 2026-09-12 ruling struck it down because at 1,024 characters per value the worst case puts the ceiling at 3, which is not a correction but a change to the shape of the product. **Declaring more than fits is no longer silent either**: what does not fit comes back as `memories_not_shown` in the prompt rather than disappearing. **Nothing reads this key until E4-1b** -- registered as a wiring debt rather than left to be discovered.",
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "description"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"
+          },
+          "ttl_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 365
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "What this field records, in the merchant's own words -- one line, **and it is sent to the generate step** so the model knows which facts it may remember and what each one means. Before this key the generate prompt received `remembered_facts` (what is *already* known) and nothing else: the first time a fact was worth remembering, the model had to invent both the key and its meaning. Stage measured the result on 2026-09-20 -- it proposed `{'concern_topic': ...}`, which is neither the required payload shape nor a declared field, and the write was refused twice over. **Same shape and same fix as `information_slots[].description` (ADR-0144 decision 3)**: a closed vocabulary the model cannot see is a vocabulary it will guess at. **Required, not optional**, and bounded at 120 because it rides in every generate request."
+          }
+        }
+      }
+    },
+    "policy_bindings": {
+      "type": "object"
+    },
+    "outcome_rules": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "strategy",
+          "party",
+          "creates_commitment",
+          "fulfilment"
+        ],
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "party": {
+            "enum": [
+              "ai",
+              "customer",
+              "employee",
+              "external"
+            ]
+          },
+          "creates_commitment": {
+            "enum": [
+              "quote_or_calculate",
+              "lookup_or_verify",
+              "apply_price_or_discount",
+              "send_material",
+              "contact_or_ask_human",
+              "provide_information",
+              "take_action"
+            ]
+          },
+          "fulfilment": {
+            "enum": [
+              "same_turn",
+              "awaiting_customer",
+              "awaiting_human",
+              "ai_commitment_due",
+              "customer_promise_due"
+            ],
+            "description": "这一条承诺靠什么兑现。**五个值是从在架配包里数出来的，不是编的** —— 第一版我按 event kind 的名字凑了五个，漏掉 `awaiting_human`、多写了一个 `business_event_followup`（在架零使用），封版当场被拒。**定型一个已经在跑的词表，要先数它今天装着什么。** **两个**（`ai_commitment_due` / `customer_promise_due`）与 `scheduled_events.kind` 同名，**三个**（`same_turn` / `awaiting_customer` / `awaiting_human`）不是事件、是状态 —— 两族混在一列里是现状，**本批只把它定型，不重新分它**（登记 T357）。"
+          }
+        }
+      },
+      "description": "哪一条策略会让哪一方欠下哪一类承诺。**2026-09-16 批 11 定型，在此之前它是 `{\"type\": \"object\"}`** —— 必填、而里面装着三个词表，**多传一个不报错**（`CLAUDE.md` 第三节那个形状）。`creates_commitment` 的词表与 `commitment-record.schema.json` 的 `type` **按等值集合钉住**，所以图纸改一个值两边一起红。 **它今天仍然零消费方**（`creates_commitment` 在 `services/` `packages/` 里 0 命中），而本批没有拿它当 `type` 的来源 —— 它按**策略**索引，是规划步的事实，而客户承诺由理解步提取、跑在规划之前。两个机制分开，登记在 T357。"
+    },
+    "annotation_taxonomy": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "confidence_gate_policy_ref": {
+      "type": "string"
+    },
+    "manipulation_context_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assist_policy": {
+      "type": "object"
+    },
+    "golden_manifest": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_material_texts": {
+      "description": "The words behind target_frames[].content_materials, keyed by the same ref. **Not written in this file**: profiles/registry.py::load_package merges it from the sibling materials.json and refuses a profile.json that declares it directly, so the prose stays editable on its own while remaining covered by identity.content_hash. Optional -- a package that supplies no materials.json has no such key, and the generation step is then told about no materials, which is how every profile behaved before this existed. Once a package does supply one, load_package additionally requires that the key set equals the set of refs its frames declare, in both directions; JSON Schema cannot express that.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4000
+      }
+    },
+    "closing_frame_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Optional. Names a target frame that owns the closing turn when the root goal completes (ADR-0031). Must match one of target_frames[].id and must not name the root frame's own definition; JSON Schema cannot express either, so profiles/registry.py::load_package enforces both at load time and refuses the package. A profile that omits this hands the terminal turn to a human instead of sending a message with no legal intent owner."
+    }
+  }
+}

@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/regression/expected-assertions.schema.json",
+  "title": "FastAgent regression event expected assertions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal_frame",
+    "must",
+    "forbid",
+    "slots",
+    "commitment",
+    "escalation",
+    "basis"
+  ],
+  "properties": {
+    "goal_frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before_definition_id",
+        "operation",
+        "target_definition_id",
+        "after_definition_id",
+        "after_stack_definition_ids",
+        "phase"
+      ],
+      "properties": {
+        "before_definition_id": {
+          "type": "string",
+          "pattern": "^(platform:)?[a-z][a-z0-9_]{1,63}$"
+        },
+        "operation": {
+          "enum": [
+            "keep",
+            "push",
+            "repair",
+            "request_pop",
+            "complete",
+            "abandon"
+          ]
+        },
+        "target_definition_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "after_definition_id": {
+          "type": "string",
+          "pattern": "^(platform:)?[a-z][a-z0-9_]{1,63}$"
+        },
+        "after_stack_definition_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {
+            "type": "string",
+            "pattern": "^(platform:)?[a-z][a-z0-9_]{1,63}$"
+          },
+          "$comment": "Length is MAX_STACK_DEPTH (inference_validation.py) live frames plus the two terminal frames B4-7 leaves beneath them -- the completed root and the completed closing frame; measured maximum 5, see tests/contracts/test_synthetic_carrier_corpus.py. Ids carry the `platform:` prefix since B4-7 (ADR-0099): every tidily finished conversation ends on `platform:no_goal`, and the previous pattern could not match it. It used to be maxItems:1 with a const item, which could not express a pushed child frame at all -- the retired corpus never pushed, so nothing noticed."
+        },
+        "phase": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,63}$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "keep"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target_definition_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "must": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/assertion"
+      }
+    },
+    "forbid": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/assertion"
+      },
+      "description": "May be empty, and only for one reason: the event's whole content is a stack transition, which `goal_frame` already asserts deterministically. Writing a forbid there duplicates the goal_frame assertion in prose and costs a judge call to re-answer a decided question (user ruling 2026-09-03, deleting SC01-E03-F1 and SC01-E06-F1). `minItems` was 1 until then. The narrower rule this relaxation is NOT allowed to become -- an event with no forbid because nobody thought of one -- is guarded by test_an_event_without_a_forbid_is_one_whose_transition_is_the_assertion."
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/slotAssertion"
+      }
+    },
+    "commitment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "records"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "none",
+            "conditional",
+            "required"
+          ]
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commitmentAssertion"
+          }
+        }
+      }
+    },
+    "escalation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "reason_code",
+        "condition"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "none",
+            "conditional",
+            "manual_task",
+            "silent_handoff"
+          ]
+        },
+        "reason_code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z][a-z0-9_]{1,63}$"
+        },
+        "condition": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        }
+      }
+    },
+    "basis": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9._:-]{1,95}$"
+      }
+    }
+  },
+  "$defs": {
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "statement",
+        "evidence",
+        "predicate"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9-]{4,64}$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 500
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.:-]{1,127}$"
+          }
+        },
+        "predicate": {
+          "$ref": "#/$defs/predicate"
+        }
+      }
+    },
+    "predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluator_release",
+        "rubric_id",
+        "input_paths",
+        "operator",
+        "expected_value"
+      ],
+      "properties": {
+        "evaluator_release": {
+          "const": "assertion-rubric-v1"
+        },
+        "rubric_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9-]{4,64}$"
+        },
+        "input_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.:-]{1,127}$"
+          }
+        },
+        "operator": {
+          "const": "rubric_passes"
+        },
+        "expected_value": {
+          "const": true
+        }
+      }
+    },
+    "slotAssertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "operation",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.]{1,95}$"
+        },
+        "operation": {
+          "enum": [
+            "set",
+            "preserve",
+            "clear",
+            "not_set"
+          ]
+        },
+        "value": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "commitmentAssertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "party",
+        "status",
+        "wait_state",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "quote_or_calculate",
+            "lookup_or_verify",
+            "apply_price_or_discount",
+            "send_material",
+            "contact_or_ask_human",
+            "provide_information",
+            "take_action"
+          ]
+        },
+        "party": {
+          "enum": [
+            "ai",
+            "customer",
+            "employee",
+            "external"
+          ]
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "active",
+            "fulfilled",
+            "overdue",
+            "withdrawn",
+            "superseded",
+            "remedy_running",
+            "escalated",
+            "fail_open"
+          ]
+        },
+        "wait_state": {
+          "enum": [
+            "none",
+            "awaiting_customer_input"
+          ]
+        },
+        "condition": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        }
+      }
+    }
+  },
+  "$comment": "Generalised 2026-09-03. The frame ids and the phase vocabulary were previously `const`/`enum` pinned to the retired corpus, and `after_stack_definition_ids` was capped at one entry -- so this schema could describe only that one corpus, and could not describe a pushed child frame at all. ADR-0039 replaced the carrier; the per-corpus values stay pinned in tests/contracts/test_active_regression_cases.py, which is where corpus-specific expectations belong."
+}

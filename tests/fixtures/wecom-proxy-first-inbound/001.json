@@ -1,0 +1,43 @@
+{
+  "code": 0,
+  "data": [
+    {
+      "TenantId": 0,
+      "base64RawData": "Cg4IAxIKCghb5ZGy54mZXQoMCAASCAoG5aW955qE",
+      "cmd": 15000,
+      "customParam": "v2-stage-01",
+      "fromRoomId": "<id-01>",
+      "guid": "D05FCC41-9740-4932-81A4-6A54E8836AFF",
+      "isRoomNotice": "<id-01>",
+      "msgData": {
+        "atList": [],
+        "content": "[呲牙]好的",
+        "extras": null,
+        "moreDetail": [
+          {
+            "subtype": 3,
+            "text": "[呲牙]"
+          },
+          {
+            "subtype": 0,
+            "text": "好的"
+          }
+        ],
+        "reply": {}
+      },
+      "msgFlag": 16777216,
+      "msgServerId": 1000852,
+      "msgType": 2,
+      "msgUniqueIdentifier": "176530202063103839",
+      "receiverId": "<id-02>",
+      "referId": 0,
+      "requestId": "0769f7cf1ed5565f39e6ae293b0ba6be",
+      "senderId": "<id-03>",
+      "senderName": "",
+      "seq": 17350621,
+      "timestamp": 1789003357,
+      "userId": "<id-02>"
+    }
+  ],
+  "msg": "ok"
+}

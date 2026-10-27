@@ -1,0 +1,103 @@
+# 作品集演示用的那套依赖：PostgreSQL + 两个 Redis。
+#
+# ## 为什么这里**没有**应用服务
+#
+# 这一份只起依赖，三个进程角色（api / ingress / worker）和渠道模拟器
+# **跑在宿主机上**（`python -m fastagent_v2.worker.cli worker` 等）。
+# 这不是偷懒，是三条理由：
+#
+# 1. **这是这个仓每天真的在跑的那条路。** 门禁（`scripts/ci.sh` /
+#    `ci.ps1`）就是「依赖进容器、代码在宿主机」，所以它每天被验证一次。
+#    把应用也塞进容器会新增一条**没有任何东西验证过**的起法 ——
+#    而一个作品集演示最怕的就是在读者机器上第一次失败；
+# 2. **生产镜像有意不带演示素材。** `Dockerfile` 复制了 `profiles/`
+#    但**没有复制 `demo/`**，而那是**对的**：`Settings.from_env` 把
+#    `scripted` 挡在 `local` / `ci` 之外（见 `OFFLINE_MODEL_PROVIDERS`），
+#    所以生产镜像里本来就不该躺着一份演示脚本。
+#    要让容器跑回放，就得往生产镜像里塞它永远不该用的东西；
+# 3. **读者已经有一个 venv 了。** README 那条「30 秒」路径就是
+#    `pip install -r requirements-dev.lock`，所以宿主机侧什么都不缺。
+#
+# ## 与 `infrastructure/local/compose.yml` 的关系
+#
+# **那一份不要改。** 它被门禁与 `scripts/local_stack.py` 用着，
+# 项目名和三个端口都是按「一个 checkout 一套栈」算出来的 ——
+# 那是为了让两个并行的门禁跑不互相踩（那件事静默发生过八次）。
+#
+# 演示是**手跑的、一次一套**，所以这一份反过来：固定项目名
+# （`fastagent-demo`，读者 `docker compose -p fastagent-demo down` 就能收干净）
+# 和固定端口默认值。两份因此**因为不同的原因改变**，所以是两份文件，
+# 不是一份事实的两份拷贝。
+#
+# ## 凭据
+#
+# 三个密码**从环境里来，没有默认值**（`:?required`）—— 与那份门禁 compose 同源。
+# `demo.env`（同目录）里**一个凭据都没有**，它只放开关；
+# 这三个密码**由起栈的人现生成**，照 `scripts/ci.sh` 里 `new_secret` 的成例
+# （每次一套、跑完随 tmpfs 一起没）。
+#
+# ⚠️ **本仓现在还没有一个替你做这件事的脚本** —— README
+# 「让同一通对话走一遍真实链路」一节把生成密码与装配环境写成了逐条可抄的命令。
+# 这里**不写一个不存在的脚本名**：
+# 一条指着不存在坐标的标记比没有标记更糟，下一个人会照着它去找，
+# 找不到，然后自己造一遍。
+# 理由不只是卫生：`scripts/check_secrets.py` 有一条规则专门抓
+# 「URL 里内联凭据」（`postgresql://user:pass@host`），
+# 而**把一份带密码的 .env 提交进仓，正是那条规则存在的原因**。
+name: fastagent-demo
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: fastagent
+      POSTGRES_USER: fastagent_migrator
+      POSTGRES_PASSWORD: ${FASTAGENT_MIGRATOR_DB_PASSWORD:?required}
+    ports:
+      - "${FASTAGENT_DEMO_PG_PORT:-25432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fastagent_migrator -d fastagent"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    # 演示应当**每次从零开始**：一次跑完 `down` 掉就什么都不剩。
+    # 一个带着上一次残留的演示会给出无法复现的输出。
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  queue-redis:
+    image: redis:7-alpine
+    environment:
+      FASTAGENT_REDIS_PASSWORD: ${FASTAGENT_QUEUE_REDIS_PASSWORD:?required}
+    command:
+      - /bin/sh
+      - -ec
+      - exec redis-server --appendonly yes --appendfsync everysec --maxmemory-policy noeviction --requirepass "$${FASTAGENT_REDIS_PASSWORD}"
+    ports:
+      - "${FASTAGENT_DEMO_QUEUE_REDIS_PORT:-26379}:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$FASTAGENT_REDIS_PASSWORD\" --no-auth-warning ping | grep PONG"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    tmpfs:
+      - /data
+
+  cache-redis:
+    image: redis:7-alpine
+    environment:
+      FASTAGENT_REDIS_PASSWORD: ${FASTAGENT_CACHE_REDIS_PASSWORD:?required}
+    command:
+      - /bin/sh
+      - -ec
+      # noeviction，不是 allkeys-lru：这个实例存失败尝试计数，
+      # 而 LRU 策略让攻击者可以靠填满缓存把受害者的计数挤掉
+      # （与门禁那份 compose 同一条理由，独立审查 2026-09-05 P1-1）。
+      - exec redis-server --save "" --appendonly no --maxmemory-policy noeviction --requirepass "$${FASTAGENT_REDIS_PASSWORD}"
+    ports:
+      - "${FASTAGENT_DEMO_CACHE_REDIS_PORT:-26380}:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$FASTAGENT_REDIS_PASSWORD\" --no-auth-warning ping | grep PONG"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

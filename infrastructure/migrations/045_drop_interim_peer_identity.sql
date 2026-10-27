@@ -1,0 +1,54 @@
+-- T97 / B3-2: drop the interim counterparty column on the aggregate.
+--
+-- `017` added `conversation_aggregates.peer_external_user_id` and wrote its own
+-- expiry into the comment above it:
+--
+--     When the inbound half lands, the envelope carries the identity and this
+--     column is either backfilled from it or dropped. Registered as T97 with
+--     that trigger, because an interim column with no expiry is just a column.
+--
+-- **The trigger has fired.** B3-2b landed inbound parsing, so a customer
+-- message now arrives as an envelope; and the envelope has carried *which*
+-- customer since the M0 skeleton (`b0d9c35`) -- `actor.actor_id`, populated by
+-- `adapter.py` from the payload with the T180 degradation. The user's ruling of
+-- 2026-09-08 took the second branch: **drop it, the inbound event carries it.**
+--
+-- ## Why dropping, and not backfilling
+--
+-- The reason is the one `017` gave for calling the column interim in the first
+-- place: **who spoke is a property of the event, not of the conversation.** A
+-- conversation can change counterparty across a rebind, so a single column on
+-- the aggregate is a value that is right until it silently is not. Backfilling
+-- would have kept that shape and only changed who writes it.
+--
+-- ## What this costs, stated plainly
+--
+-- **Nothing that is running.** The column has never had a reader or a writer in
+-- application code -- verified before this migration was written:
+-- `grep -rn peer_external_user_id --include=*.py` returns nothing outside the
+-- migrations. It was, in the schedule's own words, "运维手工种、无人校验": a
+-- value an operator would seed by hand and nothing would check.
+--
+-- **The frozen contract does not move.** This was the part the plan expected to
+-- be expensive -- 排期 §三 carried "动冻结合同 → 需 ADR" on this row -- and it
+-- turned out not to apply: `message-envelope` already declares
+-- `actor.actor_id`, so nothing needed adding and no ADR needed to name a
+-- revision. That correction is recorded on the row itself.
+--
+-- ## Irreversibility
+--
+-- A dropped column takes its data with it. Here that is defensible precisely
+-- because there is no data. Measured on Stage before writing this file, not
+-- assumed:
+--
+--     SELECT count(*) AS total, count(peer_external_user_id) AS seeded
+--       FROM conversation_aggregates;   ->   0 | 0
+--
+-- Nothing writes it, and nothing has been written. If a future
+-- deployment *has* seeded it by hand, that value is by definition unvalidated
+-- and unreferenced -- which is the defect being removed, not a loss.
+ALTER TABLE conversation_aggregates
+    DROP COLUMN IF EXISTS peer_external_user_id;
+
+INSERT INTO schema_migrations(version) VALUES ('045_drop_interim_peer_identity')
+ON CONFLICT (version) DO NOTHING;

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/intent-record.schema.json",
+  "title": "IntentRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "tenant_id", "conversation_id", "kind", "status", "proposal", "proposed_by", "strategy_id", "target_frame_id", "idempotency_key", "preconditions", "policy_evidence"],
+  "properties": {
+    "id": {"type": "string", "format": "uuid"},
+    "tenant_id": {"type": "string", "format": "uuid"},
+    "conversation_id": {"type": "string", "format": "uuid"},
+    "kind": {"enum": ["send_message", "send_material", "remember", "schedule_event", "cancel_event", "reschedule_event", "quote", "create_order", "update_order", "followup", "handoff", "manual_task"]},
+    "status": {"enum": ["PROPOSED", "APPROVED", "EXECUTING", "APPLIED", "DENIED", "UNKNOWN", "COMPENSATING", "COMPENSATED", "FAILED"]},
+    "proposal": {"type": "object"},
+    "proposed_by": {"type": "object"},
+    "strategy_id": {"type": "string"},
+    "target_frame_id": {"type": "string", "format": "uuid"},
+    "idempotency_key": {"type": "string", "minLength": 8, "maxLength": 255},
+    "preconditions": {"type": "object"},
+    "policy_evidence": {"type": "array", "items": {"type": "string", "format": "uuid"}},
+    "execution_token": {"type": ["string", "null"]},
+    "lease_expires_at": {"type": ["string", "null"], "format": "date-time"},
+    "external_operation_ref": {"type": ["string", "null"]},
+    "result": {"type": ["object", "null"]},
+    "inverse": {"type": ["object", "null"]},
+    "unknown_reason": {"type": ["string", "null"]},
+    "manual_task_id": {"type": ["string", "null"], "format": "uuid"}
+  }
+}

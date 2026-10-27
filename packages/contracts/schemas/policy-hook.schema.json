@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/policy-hook.schema.json",
+  "title": "PolicyHook",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["input", "output"],
+  "properties": {
+    "input": {
+      "type": "object", "additionalProperties": false,
+      "required": ["hook", "context", "target_frame", "strategy_or_intent"],
+      "properties": {
+        "hook": {"enum": ["pre_inference", "post_understanding", "post_plan", "pre_generation", "pre_execute", "pre_delivery"]},
+        "context": {"type": "object"},
+        "target_frame": {"type": "object"},
+        "strategy_or_intent": {"type": "object"}
+      }
+    },
+    "output": {
+      "type": "object", "additionalProperties": false,
+      "required": ["effect", "reason_code", "modifications", "obligations", "policy_id", "policy_version"],
+      "properties": {
+        "effect": {"enum": ["allow", "deny", "modify", "manual_review"]},
+        "reason_code": {"type": "string"},
+        "modifications": {"type": "object"},
+        "obligations": {"type": "array", "items": {"enum": ["audit", "redact", "require_evidence", "create_manual_task"]}},
+        "policy_id": {"type": "string"},
+        "policy_version": {"type": "string"},
+        "next_allowed_at": {"type": ["string", "null"], "format": "date-time"},
+        "suppressed_counter": {"type": ["string", "null"]},
+        "terminal_exit": {"type": "boolean", "default": false}
+      }
+    }
+  }
+}

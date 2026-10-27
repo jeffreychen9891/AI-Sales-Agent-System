@@ -1,0 +1,62 @@
+# The project name a **hand-run** `docker compose up` gets. The gate scripts
+# override it with `-p`, deriving a per-checkout name from `scripts/local_stack.py`
+# so that two checkouts on one machine own two stacks rather than sharing one --
+# which they did, silently, eight times (see that file's docstring).
+#
+# The three host ports below are parameterised for the same reason and keep their
+# historical values as defaults, so nothing a person types by hand changes.
+name: fastagent-m0-local
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: fastagent
+      POSTGRES_USER: fastagent_migrator
+      POSTGRES_PASSWORD: ${FASTAGENT_MIGRATOR_DB_PASSWORD:?required}
+    ports:
+      - "${FASTAGENT_LOCAL_PG_PORT:-55432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fastagent_migrator -d fastagent"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  queue-redis:
+    image: redis:7-alpine
+    environment:
+      FASTAGENT_REDIS_PASSWORD: ${FASTAGENT_QUEUE_REDIS_PASSWORD:?required}
+    command:
+      - /bin/sh
+      - -ec
+      - exec redis-server --appendonly yes --appendfsync everysec --maxmemory-policy noeviction --requirepass "$${FASTAGENT_REDIS_PASSWORD}"
+    ports:
+      - "${FASTAGENT_LOCAL_QUEUE_REDIS_PORT:-56379}:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$FASTAGENT_REDIS_PASSWORD\" --no-auth-warning ping | grep PONG"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    tmpfs:
+      - /data
+
+  cache-redis:
+    image: redis:7-alpine
+    environment:
+      FASTAGENT_REDIS_PASSWORD: ${FASTAGENT_CACHE_REDIS_PASSWORD:?required}
+    command:
+      - /bin/sh
+      - -ec
+      # noeviction, not allkeys-lru: this instance holds the failed-attempt
+      # counters, and an LRU policy let an attacker evict a victim's counter
+      # by filling the cache (throttle independent review 2026-09-05, P1-1).
+      - exec redis-server --save "" --appendonly no --maxmemory-policy noeviction --requirepass "$${FASTAGENT_REDIS_PASSWORD}"
+    ports:
+      - "${FASTAGENT_LOCAL_CACHE_REDIS_PORT:-56380}:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$FASTAGENT_REDIS_PASSWORD\" --no-auth-warning ping | grep PONG"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

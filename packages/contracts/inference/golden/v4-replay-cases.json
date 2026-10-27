@@ -1,0 +1,29 @@
+{
+  "prompt_release": "m1a-prompt-v17",
+  "cases": [
+    {
+      "event_type": "customer_message",
+      "text": "你好，我想了解你们能提供什么服务。"
+    },
+    {
+      "event_type": "customer_message",
+      "text": "价格是多少？请只回答有依据的内容。"
+    },
+    {
+      "event_type": "customer_message",
+      "text": "更正一下，我不是咨询退款，是想修改订单。"
+    },
+    {
+      "event_type": "customer_message",
+      "text": "等了很久还没人处理，我很不满意。"
+    },
+    {
+      "event_type": "customer_message",
+      "text": "请转人工，我不想继续和机器人沟通。"
+    },
+    {
+      "event_type": "timer",
+      "text": "客户此前约定今天补充资料，现在需要跟进。"
+    }
+  ]
+}

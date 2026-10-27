@@ -1,0 +1,139 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-sales-agent-system"
+version = "0.0.1"
+description = "FastAgent v2 M0 walking skeleton"
+requires-python = ">=3.12"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = [
+  "fastagent_v2.runtime",
+  "fastagent_v2.api",
+  "fastagent_v2.profiles",
+  "fastagent_v2.worker",
+  "fastagent_v2.ingress",
+  "fastagent_v2.ingress.wecom_proxy",
+  "fastagent_v2.channels",
+  "fastagent_v2.channels.wecom_proxy",
+]
+
+[tool.setuptools.package-dir]
+"fastagent_v2.runtime" = "packages/runtime/src/fastagent_v2/runtime"
+"fastagent_v2.api" = "services/api/src/fastagent_v2/api"
+"fastagent_v2.profiles" = "services/api/src/fastagent_v2/profiles"
+"fastagent_v2.worker" = "services/worker/src/fastagent_v2/worker"
+"fastagent_v2.ingress" = "services/ingress/src/fastagent_v2/ingress"
+"fastagent_v2.ingress.wecom_proxy" = "services/ingress/src/fastagent_v2/ingress/wecom_proxy"
+"fastagent_v2.channels" = "packages/channels/src/fastagent_v2/channels"
+"fastagent_v2.channels.wecom_proxy" = "packages/channels/src/fastagent_v2/channels/wecom_proxy"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.in"]}
+
+[tool.pytest.ini_options]
+# `--allow-hosts` 是 `providers.py` 那句「nothing in the test suite is allowed to
+# open a socket」的**执行者**。在它之前那句话没有执行者 —— 按本仓五条判据，
+# 那是第 1 类「约束声明了，运行期无人执行」，而它就写在那条约束自己的模块里。
+#
+# **它写在这里而不是写成一个 conftest fixture，是为了让它不能静默消失**：
+# `--strict-config` 下 pytest-socket 没装时 pytest **拒绝启动**；
+# 而一个 `try: import pytest_socket / except ImportError: pass` 的 fixture
+# 在同样的情况下会安静地什么都不做 —— 那正好又变回「声明了没人执行」。
+#
+# **范围说清楚，因为它只在一个方向上成立**（`AGENTS.md`「描述性质的词，
+# 在它只于某个方向成立时必须带方向」）：
+# * 它补的是 `socket.socket.connect`，**不碰 `bind` / `listen` / `accept`** ——
+#   所以 `tests/conftest.py` 那个起 uvicorn 的 `channel_sink` fixture 照常工作；
+# * 它只管**本进程**。用例起的子进程（`prove_directory_split`、
+#   `check_material_dimensions` 那几条）不在它管辖内；
+# * 回环放行是必须的，不是放宽：整个 `integration` / `e2e` 层要连本机的
+#   PostgreSQL 与 Redis。三个值都要（`localhost` 覆盖按主机名连的那一种，
+#   两个 IP 覆盖已解析的那一种 —— pytest-socket 的放行集是
+#   「解析出来的 IP ∪ 字面量主机名」）。
+#
+# 钉它还活着的是 `tests/contracts/test_the_socket_guard_is_live.py`，
+# **那条用例真的去连一次外网地址**：一条只检查「补丁装了没」的断言，
+# 在补丁换了实现之后会继续绿。
+addopts = "-ra --strict-config --strict-markers --allow-hosts=127.0.0.1,::1,localhost"
+testpaths = ["tests"]
+pythonpath = [
+  # **仓根。** 源仓里有 **78 个测试模块**写 `from tests.<x> import ...`
+  # （contracts 14 · integration 44 · e2e 18 · security 3，`git grep` 数的），
+  # 而那个写法要求仓根在 `sys.path` 上。在这一行之前它确实在 —— **但只因为每一次
+  # 调用都写成 `python -m pytest`**，而 `-m` 会把当前目录塞进 `sys.path`。
+  # 两个门禁脚本都是那个写法，于是这个依赖**从来没有在任何一次绿里露过头**。
+  #
+  # ⚠️ 代价是读者付的（2026-10-27 实测）：作品集 README 第一条命令写的是
+  # `pytest tests/contracts -q`（控制台脚本，**不加这一句**），
+  # 在导出树里照抄跑是 **12 errors during collection**；
+  # `pytest tests/integration tests/e2e tests/security -q` 是 **65 errors**。
+  # 旁边还写着「实测产出 2102 passed」—— 那个数是真的，只是它是
+  # `python -m pytest` 跑出来的，而文档让人跑另一条命令。
+  # **「门禁怎么调」与「文档让人怎么调」是两个事实，而只有前一个被验过。**
+  #
+  # 加上这一行之后两种调用法等价（`-m` 本来就把它放进去了，所以对门禁是零变化），
+  # 差别消失而不是被文档绕开。钉它的是
+  # `tests/contracts/test_the_documented_invocation_works.py`。
+  ".",
+  "packages/runtime/src",
+  "packages/channels/src",
+  "services/api/src",
+  "services/worker/src",
+  "services/ingress/src",
+  # Not a source root: `tests/contracts/return_path_builders.py` is imported by
+  # its bare module name from two test modules in the same directory, and until
+  # this line that worked only because pytest's default `prepend` import mode
+  # injects the test file's directory into `sys.path`. Anyone switching to
+  # `--import-mode=importlib` would have turned two green modules into a
+  # collection error with no obvious cause (independent review 2026-09-04,
+  # P3-4). Listed here so the import does not depend on that mode.
+  "tests/contracts",
+  # Same reason, one directory over: `tests/e2e/test_manager_digest.py`
+  # borrows `test_retry_budget`'s outbox builder rather than copying it.
+  "tests/e2e",
+]
+markers = [
+  "integration: requires local PostgreSQL and Redis",
+  "e2e: exercises the full M0 boundary path",
+  "security: verifies a security birth condition",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "S", "ARG"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+# **ARG 整目录豁免（用户 2026-09-11 裁定）。** 实测 238 条里 210 条在这里，
+# 而它们多半是合法的：pytest 的 fixture 为副作用注入、mock 的 *args/**kwargs、
+# FastAPI 异常处理器的签名——都是「参数必须在签名里、但函数体不读它」。
+# ARG 要补的盲区（零调用方检查问「函数有没有调用方」，不问「参数有没有被读」）
+# 只在生产代码上值得问：那 28 条里就有 generate() 的 profile 这种假声明。
+"tests/**/*.py" = ["S105", "S106", "S107", "ARG"]
+"scripts/**/*.py" = ["S603"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = [
+  "packages/runtime/src",
+  "packages/channels/src",
+  "services/api/src",
+  "services/worker/src",
+  "services/ingress/src",
+  # `scripts` 也在这里，因为脚本之间真的互相 import（`ingest_evidence` 读
+  # `check_secrets.scan_line`，探针脚本读 `probe_harness`）。不在路径上时
+  # mypy 只能 `import-not-found`，于是每个这样的 import 都挂一条
+  # `type: ignore` —— 而那条 ignore 把**整个被导入模块的类型**一起静音了。
+  # 加上之后实测 95 个文件 1 条错误，就是那条现在多余的 ignore（已删）。
+  "scripts",
+]

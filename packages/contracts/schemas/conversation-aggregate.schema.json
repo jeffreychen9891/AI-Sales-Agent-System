@@ -1,0 +1,402 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/conversation-aggregate.schema.json",
+  "title": "ConversationAggregate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "tenant_id",
+    "state_version",
+    "lifecycle",
+    "control_mode",
+    "generation",
+    "profile_release_id",
+    "target_stack",
+    "focus",
+    "commitment_refs",
+    "active_intent_refs",
+    "scheduled_event_refs",
+    "last_transition"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "lifecycle": {
+      "enum": [
+        "open",
+        "closing",
+        "closed"
+      ]
+    },
+    "control_mode": {
+      "enum": [
+        "ai",
+        "human",
+        "paused",
+        "blocked"
+      ]
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "profile_release_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "config_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 128,
+      "description": "The channel binding this conversation arrived through (T24), or null for aggregates created before migration 008. Null rows are reported by a repin as unlinked rather than swept into it; the binding for such a row is recoverable from ingress_replay_keys joined to inbox_events on (tenant_id, external_event_id) -- see migration 008. The 128 bound is enforced at the point of creation by a CHECK on channel_bindings.config_id, added in 008 so the contract does not assert a limit the database would let through."
+    },
+    "target_stack": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "definition_id",
+          "goal",
+          "status",
+          "slots",
+          "entered_at",
+          "last_progress_at",
+          "parent_frame_id",
+          "interruption_reason",
+          "resume_confirmation_policy",
+          "frame_generation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "definition_id": {
+            "type": "string"
+          },
+          "goal": {
+            "type": "string",
+            "maxLength": 1500,
+            "description": "这一帧的目标，**原样抄自配包的 `target_frames[].goal`**（`pipeline._initial_aggregate`，那一行是 `str(definition[\"goal\"])`，不截断）。**`maxLength` 是 1,500，而它必须与源头 `merchant-profile.schema.json` 的 `target_frames[].goal` 是同一个数** —— 两处是一个事实的两份拷贝，由 `tests/contracts/test_the_goal_bound_is_one_number.py` 钉死相等。**为什么要有界**：goal 进 understand 与 plan **两种请求**，**每回合付两次**；1,500 汉字满载时 **4,504 线路字节**，占 `MAX_MODEL_INPUT_BYTES`（49,000）的 **9.2%**（`prompt_bytes.text_cost` 实测，基线 `8985d4d7`）。**两处分家的代价是这一份先撞**：源头放得过的包 admission 收下，写帧时才拒 —— 2026-09-20 抬源头到 1,500 而漏了这一份，演示配包的 `introduce` 自拆帧那批（`3d04ebf7`，984→1,380 字）起每次开新会话都在 `pipeline.py` 的 `validate_contract` 抛 `ValidationError`，而门禁 3,925 条全绿：全仓没有任何一条用例把在架配包送进 `_initial_aggregate`。**留痕**：1,200（用户 2026-09-15 裁定，批 2）→ 1,500（用户 2026-09-22 确认，补齐 09-20 那条裁定漏掉的一半）。同批更正原文两处：① 「1,200 汉字约 7,232 线路字节、占 14.8%」用的是 `ensure_ascii=True` 口径，而 `prompt_bytes` 模块 docstring 记着那个口径 2026-09-11 已被推翻（线路是 UTF-8，中文三字节，不是六字节），同一段满载实测 3,604 字节 / 7.4%；② 「重议条件：有配包的 goal 超过 900 字」**没有任何执行者** —— 配包 2026-09-17 就越过 900 而无人知道，换成两条会红的：本条那个钉死相等的用例，与 `test_a_salesperson_does_not_say_that.py` 的 1,400 长度守卫（它比契约早一条规则红）。"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "suspended",
+              "repair_pending",
+              "resume_confirmation_pending",
+              "completed",
+              "abandoned"
+            ]
+          },
+          "slots": {
+            "type": "object",
+            "maxProperties": 10,
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ],
+              "maxLength": 400,
+              "description": "**一个标量，不是 dict** —— 这句话本来只写在下面那段 description 里，**而今天之前没有任何东西执行它**（2026-09-15 批 2 补）。`maxLength` 取 **400**，与写入侧 `understanding-result.schema.json` 的 `slot_updates[].value` **对齐**：先前只有写入侧有界，存储侧无界，于是那 400 只在「所有写入方都走 `apply_slot_updates`」这个前提下成立。**400 这个数本身要重议**，理由见下面那段 description 里那个乘积。"
+            },
+            "description": "槽位名 -> **值本身**（一个标量，不是 dict；证据在兄弟字典 `slot_evidence` 里）。**`maxProperties` 是 10，用户 2026-09-15 裁定**：它是在架最大值 **5** 的两倍（`synthetic-carrier/rental`），**重议条件是有配包声明超过 8 个槽位**。`apply_slot_updates` 只写帧定义声明过的名字，所以这一项实际由配包的 `information_slots` 决定；这里的上界是给 `frame[\"slots\"]` 进 understand 与 plan 两种请求时的字节数封顶用的（**每回合付两次**）。**逐值的 `maxLength` 2026-09-15（批 2）补成 400**，与写入侧对齐 —— 先前只有写入侧有界。**而这两条界相乘没人算过**：`10 个槽 x 每值 400 字` 在线路上是 **12,153 字节/次**，**乘两个请求 = 24,306 字节，占 `MAX_MODEL_INPUT_BYTES` 的 49.6%** —— **一个字段被默许拿走近一半的上限**。今天的真实回合远小于此，所以不撞线，**但 400 是按「一段话的长度」单值裁的，不是按「十个值、两个请求」裁的**。收紧它要重新看这个乘积，那是一次独立裁定，登记在 **T354**。"
+          },
+          "slot_evidence": {
+            "type": "object",
+            "description": "Per-slot provenance, keyed by the same names as `slots` (T25). The understanding step reports `confidence` and `evidence_event_id` with every slot update and both used to be discarded on writeback, so a 0.1-confidence slot and a 0.99 one were indistinguishable at the `complete` exit gate and nothing could answer which message a slot came from. `recorded_at` is the platform clock at writeback, not the channel-reported `occurred_at`: this is audit evidence, and a sender-controlled timestamp cannot anchor it. Optional: frames created before this existed carry none.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "confidence",
+                "recorded_at"
+              ],
+              "anyOf": [
+                {
+                  "required": [
+                    "evidence_event_ids"
+                  ]
+                },
+                {
+                  "required": [
+                    "evidence_event_id"
+                  ]
+                }
+              ],
+              "properties": {
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "evidence_event_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "uniqueItems": true,
+                  "description": "支撑这个槽位的证据（D3，RFC:165 要的就是一个数组）。**2026-09-15 从单值改成数组**：先前同一个槽位被第二条消息更新时，第一条的证据就没了。**追加，最新的在末尾**。 **`maxItems` 是 8，而它是一个选定的数**（不是推导的）：今天没有真实分布可依。按 **T354 那条教训把乘积算出来**：`maxProperties 10 × 8 条 × 约 46 字节 ≈ 3.7 KB`，那是聚合行的增量。**这一项不进 payload** —— `slot_evidence` 不在任何一个 `user_prompt` 里（批 2 那条守卫的分类表里写着它「不进 payload：证据留在聚合里，模型看到的是 slots 的值」），所以它卡的是存储，不是每回合的字节。**重议条件：有真实流量可以看「一个槽位到底会被几条消息支撑」时。**"
+                },
+                "evidence_event_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "存量行的单数形式（D3 之前写下的）。**只读不写：新的写回一律产出 `evidence_event_ids`**，而已存的行**不追溯改写**（T338 那一族：不对已存数据做追溯收紧）。两个键至少要有一个（上面那个 `anyOf`）—— 否则一行两个都没有的证据会静静地过闸。"
+                },
+                "recorded_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "source": {
+                  "enum": [
+                    "human",
+                    "model",
+                    "platform"
+                  ],
+                  "description": "Who wrote this slot (ADR-0054 §三.2). A slot written by a person is not evidence the model may revise: `apply_slot_updates` refuses model updates onto it outright, before the confidence rule and without the `correction` exemption -- because `correction` is the model's own judgement, so letting it apply here would hand the bypass to the party the rule exists to restrain. **Deliberately not required**: frames written before this existed carry none, and absent means `model`, which is what they were. **`platform` 2026-09-23（运维缺陷 18）**：`target_stack.record_delivered_slots` 据平台自己的投递记录（`intent_records` 里真的离开过 `APPROVED` 的那几条，`pipeline._delivered_materials`）写下声明了 `filled_by_delivery` 的槽。它与 `model` 的区别不是修辞：那条记录**不是模型报的**，`advance_when` 的 `delivered` 读的就是它，而那一格的注释逐字写着为什么它比模型自填的槽可信。**平台写在模型写回之后**，所以同一轮里平台的值胜出，不需要另立一条保护规则。"
+                }
+              }
+            }
+          },
+          "entered_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_progress_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "parent_frame_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "interruption_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resume_confirmation_policy": {
+            "enum": [
+              "required",
+              "optional",
+              "forbidden"
+            ]
+          },
+          "frame_generation": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "RFC 3.2 的 typed refs。**闭合键集，用户 2026-09-15 裁定**：今天只有 `contact` 一类，值要么 null（客户还没被识别）要么一个 typed ref。裁形状而不是裁长度，两个理由：(1) `contact_id` 是 uuid 列（`040_conversation_contact.sql`），类型本身就是上界，再加一个长度界是同一件事写两遍；(2) 先前这里是裸 `object`，**有人加第三类键不会红** —— 而 `topic` / `product` / `order` 三类各自都还不能加（topic 见 T349，另两类的权威表不存在）。要加哪一类，改这里就是那次裁定的执行者。",
+      "properties": {
+        "contact": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "contact_id"
+          ],
+          "properties": {
+            "contact_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "topic": {
+          "type": "null",
+          "description": "**遗留键，只许是 null，不许再被使用。** 2026-09-15 撤下那一支之前，`_focus_projection` 每轮都写 `topic: null`（T349：那一支恒不触发），所以**已经存库的聚合上带着这个键**。而 `focus` 的校验发生在好几条**不经过 `_focus_projection`** 的路径上（例如人工接管那条 POST：读出一行、就地改、就地校验），**直接把这个键判为非法会让那些已存的行校验不过** —— 那不是一次数据迁移能省掉的风险，是一次线上 500。声明成 `\"type\": \"null\"` 是最窄的兼容：**老行过得去，而任何给它赋值的企图当场红**。要把 topic 真正加回来（作为 typed ref），改的就是这一行 —— 那次裁定的执行者。**这和 T338 是同一族**：那一条不给 `merchant-profile` 加 `enum`，理由也是「对已存数据的**追溯收紧**」—— 那次的代价是「那个租户每轮对话失败」，这次是「人工接管那条路读一行就 500」。**同一个教训的两次：一份合同在运行期校验已存数据时，收紧它就是在改历史。**"
+        }
+      }
+    },
+    "commitment_refs": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "活跃/待证据的承诺 id。**`maxItems` 仍然是 20**：一条 ref 恒 42 线路字节（uuid 36 + 两个引号 + 一个逗号，实测），所以这一项的上界是 20 x 42 + 2 = 842 字节。 **11d 复查过那条到期条件，结论是它还没到期。** 原条件写的是「承诺台账落地后，按真实分布重定」——台账（迁移 063）确实落地了，**而真实分布没有落地**：`commitments` 今天的全部内容来自门禁里现建的夹具，按它重定等于按自己造的数据重定。**照旧条件的字面执行，会得到一个看起来有依据、实际上是自证的数字**，而这正是本仓 T198 那一条（自指的解除条件）要防的东西。 **所以到期条件改写成一条可满足的**：第一个真实商家上线满 30 天后，跑下面这一句取 p99，若 p99 超过 20 的一半就重定——`SELECT count(*) FROM commitments WHERE status NOT IN ('fulfilled','withdrawn','superseded') GROUP BY tenant_id, conversation_id`。 **这道界不是唯一的防线，而且它不在写入侧**：`commitment_ledger.current_refs()` 截到界内并让截这件事出声（落一行 `policy_decisions`），因为这一格的校验发生在**读路径**上——越界不是一次写入失败，是那条会话的那几条路径 500。",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "last_inbound_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "last_outbound_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "pending_question": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "memory_cursor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "summary_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "outcome_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "annotation_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "active_intent_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "scheduled_event_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "pending_exit_signal": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "relation",
+        "recorded_at"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "relation": {
+          "type": "string"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "An exit signal the customer gave **while a human was in control** (ADR-0054 §三.5). During takeover the understanding step still runs but planning does not, so a \"forget it\" said to a human agent would otherwise be understood and then dropped on the floor: the stack is frozen, nothing consumes the relation, and the resume would plan as if it had never been said. Recorded here, the resume's first plan feeds it in as `interruption_relation` and T53/T54 apply unchanged -- **the point is to supply a value, not to change a rule**. Overwritten by each inbound message rather than accumulated: a customer who says \"never mind\" and then \"actually, please do\" has withdrawn the first, and keeping it would ignore the second."
+    },
+    "last_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "transition_id",
+        "reason",
+        "policy_version",
+        "model_version",
+        "profile_version"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "transition_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "policy_version": {
+          "type": "string"
+        },
+        "model_version": {
+          "type": "string"
+        },
+        "profile_version": {
+          "type": "string"
+        }
+      }
+    },
+    "frames_entered": {
+      "description": "**这通对话进过哪几个目标帧**，按进入顺序。**「进过哪些帧」永不删除**（ADR-0146）；**「进过几次」在到顶之后会让位**（见下）。 ⚠️ **为什么不能从 `target_stack` 读**：`request_pop` 会把子帧**真的从栈里弹掉**（`target_stack.py` 那一句 `stack.pop()`）——一个正常完成并返回的帧，在栈里**一点痕迹都不留**。 实测（2026-09-21）：`introduce` 推进到 `quote` → 报价 → `complete` → `repair` → `request_pop` 之后，栈只剩 `introduce(active)`，而平台**立刻又要推一次 `quote`** —— **那是一个不会停的循环**，每一轮都给客户重报一次价。 「这个帧进过没有」这个问题有三个读者：平台推进的防循环、模型 `push` 的 `FRAME_ALREADY_ENTERED` 闸、以及计划步自己（`plan_prompt.frames_entered`）。**三个读者，一份记录。** **上界 64**：它**进 payload**（计划步按 `plan_prompt.frames_entered` 读它），所以要有界。 ⚠️ **这个上界必须有人在写入侧执行，光写在这里不够。** 2026-09-22 实测：`_record_entry` 当时是裸的 `history.append(...)`，第 65 次进帧时 `validate_contract` 在 prepare 的写路径上抛 `is too long`，**而这个数组当时声明「永不删除」，没有任何东西能把它缩短** —— 那通对话从此每一轮都炸，商家改配包救不了（数组在聚合上，不在配包上）。 **而长到 65 由客户决定**：`objection` 是 `reenter`，他提 63 次疑虑就到了。这一段原先写着「一通对话进过 64 个帧，那已经不是『聊回旧话题』，而是栈深上限（3）与 `brief_answer` 两道闸同时失效」—— **那句是错的，`reenter` 恰恰就是聊回旧话题，并且它计数**，它写在 `revisit` 落地之前。 今天由 `target_stack.FRAMES_ENTERED_CAP` 在 `_record_entry` 里执行：到顶时按 `_index_to_forget` 丢掉**最旧的那笔重复记录**，**每个进过的 `definition_id` 都还在表里** —— 丢的是「第几次」那一层精度，保的是上面三个读者问的「进过没有」。配包的 `target_frames` 有一格 `maxItems: 63`（= 64 − 平台帧数）保证总丢得掉。",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "maxItems": 64
+    },
+    "carried_slots": {
+      "description": "**上一次进这个帧时填的、而商家声明「下次还算数」的那几个槽**（ADR-0150）。`definition_id` -> `{slots, slot_evidence}`，形状与 `target_stack[]` 里那两格逐字相同。 ⚠️ **为什么需要它**：`request_pop` 那一句 `stack.pop()` 把帧**连它的槽一起**丢掉，**没有任何地方归档**（2026-09-22 实跑：一次异议往返之后，`concern_answered` 的值在聚合里一点不剩）。而散文那一侧接不住 —— `summary_for_prompt` 从**最旧**的一端淘汰（`SUMMARY_PROMPT_BYTES = 2_400`，实测那种长度的行只装得下 27 行），第一次那条答了什么，**两条路都没留下**。 **谁写**：`target_stack` 弹栈时，只存该帧声明了 `on_revisit: \"carry\"` 的那几个槽。**谁读**：`push` / 平台推进 / 收尾帧三处构造新帧时，按**当时**的配包再核一次 `carry` 才种进去 —— **两头都过滤是有意的**：存的时候滤掉商家说了不带的值（不落进存储），种的时候再滤一次，让商家改了声明之后立刻生效。 **证据一起带**：本仓每个槽都要有证据 ID，一个没有证据的槽是个说不清来历的值。带过去的证据指向**上一次那条消息** —— 那正是这个事实的出处，**不是缺陷**。 **`maxProperties` 63**：与 `merchant-profile.target_frames` 的上界同一个数（一个帧定义最多留一笔）。⚠️ **按 T354 那条教训把乘积算出来**：`63 个帧 × 10 个槽 × 400 字节 ≈ 252 KB`，那是聚合行的**最坏**增量。**它不进 payload** —— 种进新帧的 `slots` 之后就受 `slots` 自己那条 `maxProperties: 10` 管，所以它卡的是存储，不是每回合的字节。**重议条件：有真实对话的 `carried_slots` 超过 8 个帧。**",
+      "type": "object",
+      "maxProperties": 63,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "slots"
+        ],
+        "properties": {
+          "slots": {
+            "$ref": "#/properties/target_stack/items/properties/slots"
+          },
+          "slot_evidence": {
+            "$ref": "#/properties/target_stack/items/properties/slot_evidence"
+          }
+        }
+      }
+    }
+  }
+}

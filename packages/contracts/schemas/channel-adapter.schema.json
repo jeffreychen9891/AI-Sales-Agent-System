@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/channel-adapter.schema.json",
+  "title": "ChannelAdapterOperation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operation", "request"],
+  "properties": {
+    "operation": {"enum": ["verify", "normalize", "fetch_media", "send", "reconcile", "capabilities", "health"]},
+    "request": {
+      "type": "object",
+      "description": "Deliberately unconstrained, and one field inside it is deliberately outside this contract: `recipient` (channel/config_id/external_user_id) travels in `send` requests whose audience is not the customer, and this schema asserts nothing about it (B1-5, T90/T214). The dispatcher refuses an unaddressable non-customer row before a request is ever built, so the guard is real but it lives in `OutboxDispatcher.dispatch_one`, not here. **A second send implementation must not read this silence as permission to ignore the field**: `RestrictedWeComProxyClient.send_text(guid=, recipient_id=, content=)` has zero production callers today and wiring it up is on M1b's path -- an adapter that honours only `conversation_id` puts a merchant's internal digest into that merchant's customer's chat, which is T90 verbatim. Whoever wires it either tightens this schema (a frozen-contract revision, named as such) or writes the triple-to-provider mapping down with a contract test. T214 holds the decision."
+    },
+    "response": {"type": ["object", "null"]},
+    "deadline_at": {"type": ["string", "null"], "format": "date-time"},
+    "idempotency_key": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"operation": {"const": "send"}}},
+      "then": {"required": ["deadline_at", "idempotency_key"]}
+    }
+  ]
+}

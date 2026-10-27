@@ -1,0 +1,10 @@
+{
+  "materials": {
+    "material:carrier-rental-terms:v1": "租借按天计费，取件当天算第一天，归还当天不计费。租期内设备正常使用产生的磨损不另收费用；超期未还的部分按双倍日租计。",
+    "material:carrier-deposit-terms:v1": "取件前需要付一笔押金，金额按设备类目定，归还验收无损后三个工作日内原路退回。押金不抵扣租金，两笔是分开结的。",
+    "material:carrier-return-reminder:v1": "归还前请确认配件齐全（充电器、收纳盒都在），送回门店或约上门取件都可以。验收记录会当场发您一份，押金按它退。",
+    "material:carrier-advisory-scope:v1": "咨询类的需求要先做一次评估才能报价：范围、周期、要不要驻场，这三样定了价格才定得下来。评估本身不收费。",
+    "material:carrier-assessment-required:v1": "这类情况没法直接给数——得先约一次评估，看清楚现场条件和工作量。评估之后给出的报价是一口价，不再临时加项。",
+    "material:carrier-closing:v1": "这次的事就办到这里。后续有任何使用上的问题，随时在这里说一声就行，我们看到就会处理。"
+  }
+}

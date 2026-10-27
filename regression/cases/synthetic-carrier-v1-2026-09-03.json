@@ -1,0 +1,847 @@
+{
+  "schema_version": "1.0.0",
+  "status": "ACTIVE",
+  "profile_release": "synthetic-two-axis-desk",
+  "assertions_confirmed_by_user_on": null,
+  "source": {
+    "system": "synthetic",
+    "method": "Authored for this repository. No customer, merchant or production data of any kind was used, so there is nothing here to de-identify and no authorisation context that can lapse -- which is the whole reason ADR-0039 needed a synthetic carrier.",
+    "carrier_dimensions": {
+      "note": "The two goal frames are classified by three orthogonal dimensions rather than by industry. They are recorded here rather than in the profile because merchant-profile.schema.json pins each frame with additionalProperties:false, and widening a shipped contract to carry a test carrier's taxonomy would be the implementation rewriting the drawing.",
+      "rental": {
+        "goods_flow": "both_ways",
+        "money_flow": "both_ways",
+        "pricing": "fixed"
+      },
+      "consultation": {
+        "goods_flow": "none",
+        "money_flow": "inbound",
+        "pricing": "to_be_assessed"
+      }
+    }
+  },
+  "usage_boundary": {
+    "allowed": [
+      "offline replay",
+      "isolated Stage validation"
+    ],
+    "forbidden": [
+      "Production ingress",
+      "customer contact",
+      "external delivery"
+    ]
+  },
+  "mock_manifest": [
+    "channel",
+    "clock",
+    "model",
+    "knowledge",
+    "business_event",
+    "executor"
+  ],
+  "invariant_definitions_ref": "regression/invariants.json",
+  "vocabulary": {
+    "note": "Declared here because the assertion schema no longer pins it. The retired corpus had its frame ids and phases held by `const`/`enum` in the schema; generalising that for a second carrier removed the only thing holding corpus vocabulary, and for a while nothing replaced it (independent review 2026-09-03, P2b). Frame ids are checked against the profile itself; phases and bases are checked against these lists.",
+    "phases": [
+      "greeting",
+      "scope",
+      "quote",
+      "advisory_side_question",
+      "advisory_scope",
+      "advisory_resolved",
+      "return_proposed",
+      "returned_to_rental",
+      "return_due_reminder"
+    ],
+    "bases": [
+      "AUTHORED",
+      "USER-SHAPE-2026-09-03",
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "RFC-CE-17.1",
+      "RFC-CE-17.2"
+    ]
+  },
+  "rubric_registry_ref": "regression/assertion-rubric-registry-carrier.json",
+  "cases": [
+    {
+      "case_id": "v1-carrier-01",
+      "case_version": 1,
+      "status": "ACTIVE",
+      "scope": "carrier_minimal",
+      "invariants": [
+        "G1",
+        "G2",
+        "G3",
+        "G4",
+        "G5"
+      ],
+      "initial_aggregate": {
+        "target_stack": [
+          {
+            "definition_id": "rental",
+            "status": "active"
+          }
+        ]
+      },
+      "events": [
+        {
+          "at_seconds": 0,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "你好，我想借一件东西用几天。",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "rental",
+              "operation": "keep",
+              "target_definition_id": null,
+              "after_definition_id": "rental",
+              "after_stack_definition_ids": [
+                "rental"
+              ],
+              "phase": "greeting"
+            },
+            "must": [
+              {
+                "id": "SC01-E00-M1",
+                "statement": "Open by stating what can be helped with, drawing only on approved profile material.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "knowledge.evidence_refs"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E00-M1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "knowledge.evidence_refs"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [
+              {
+                "id": "SC01-E00-F1",
+                "statement": "Do not state any amount, rate or availability claim before the request is scoped.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "policy.pricing_decision"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E00-F1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "policy.pricing_decision"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "slots": [],
+            "commitment": {
+              "mode": "none",
+              "records": []
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED",
+              "G5"
+            ]
+          }
+        },
+        {
+          "at_seconds": 45,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "是那种可以按天计的通用器具，我想借三天。",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "rental",
+              "operation": "keep",
+              "target_definition_id": null,
+              "after_definition_id": "rental",
+              "after_stack_definition_ids": [
+                "rental"
+              ],
+              "phase": "scope"
+            },
+            "must": [
+              {
+                "id": "SC01-E01-M1",
+                "statement": "Record the stated category and period as slots rather than restating them as prose.",
+                "evidence": [
+                  "understanding.slot_updates",
+                  "aggregate.target_stack"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E01-M1",
+                  "input_paths": [
+                    "understanding.slot_updates",
+                    "aggregate.target_stack"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [
+              {
+                "id": "SC01-E01-F1",
+                "statement": "Do not ask more than one question in a single turn.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "outbox.message_count"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E01-F1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "outbox.message_count"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "slots": [
+              {
+                "name": "item_category",
+                "operation": "set",
+                "value": "general_daily_use"
+              },
+              {
+                "name": "rental_period",
+                "operation": "set",
+                "value": "3d"
+              }
+            ],
+            "commitment": {
+              "mode": "none",
+              "records": []
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED"
+            ]
+          }
+        },
+        {
+          "at_seconds": 120,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "押金和租金各是多少？",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "rental",
+              "operation": "keep",
+              "target_definition_id": null,
+              "after_definition_id": "rental",
+              "after_stack_definition_ids": [
+                "rental"
+              ],
+              "phase": "quote"
+            },
+            "must": [
+              {
+                "id": "SC01-E02-M1",
+                "statement": "Every figure given for deposit, rent, late fee or damage deduction resolves to the fixed pricing policy for the recorded category and period.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "policy.pricing_decision"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E02-M1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "policy.pricing_decision"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [
+              {
+                "id": "SC01-E02-F1",
+                "statement": "Do not invent, round or adjust any figure that the pricing policy did not produce.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "policy.pricing_decision"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E02-F1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "policy.pricing_decision"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "slots": [
+              {
+                "name": "deposit_amount",
+                "operation": "set",
+                "value": "policy:carrier-fixed-pricing:v1#deposit/general_daily_use/3d"
+              },
+              {
+                "name": "return_date",
+                "operation": "set",
+                "value": "2026-09-06"
+              }
+            ],
+            "commitment": {
+              "mode": "required",
+              "records": [
+                {
+                  "type": "quote_or_calculate",
+                  "party": "ai",
+                  "status": "fulfilled",
+                  "wait_state": "none",
+                  "condition": "the figures are stated in the same turn they are promised"
+                }
+              ]
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED",
+              "G1"
+            ]
+          }
+        },
+        {
+          "at_seconds": 200,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "顺便问一下，你们能不能帮我评估另一件事该怎么处理？",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "rental",
+              "operation": "push",
+              "target_definition_id": "consultation",
+              "after_definition_id": "consultation",
+              "after_stack_definition_ids": [
+                "rental",
+                "consultation"
+              ],
+              "phase": "advisory_side_question"
+            },
+            "must": [
+              {
+                "id": "SC01-E03-M1",
+                "statement": "Open a child frame for the advisory request instead of answering it inside the rental goal.",
+                "evidence": [
+                  "aggregate.target_stack",
+                  "audit.target_stack_transition"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E03-M1",
+                  "input_paths": [
+                    "aggregate.target_stack",
+                    "audit.target_stack_transition"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [],
+            "slots": [],
+            "commitment": {
+              "mode": "none",
+              "records": []
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED",
+              "USER-SHAPE-2026-09-03",
+              "RFC-CE-17.1"
+            ]
+          }
+        },
+        {
+          "at_seconds": 260,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "大概多少钱？给个数就行。",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "consultation",
+              "operation": "keep",
+              "target_definition_id": null,
+              "after_definition_id": "consultation",
+              "after_stack_definition_ids": [
+                "rental",
+                "consultation"
+              ],
+              "phase": "advisory_scope"
+            },
+            "must": [
+              {
+                "id": "SC01-E04-M1",
+                "statement": "State that the advisory request must be assessed before any figure exists, and record that an assessment is needed.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "understanding.slot_updates"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E04-M1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "understanding.slot_updates"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [
+              {
+                "id": "SC01-E04-F1",
+                "statement": "Do not state any amount, range, estimate or comparison while quote_authorized is not true.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "policy.pricing_decision"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E04-F1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "policy.pricing_decision"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "slots": [
+              {
+                "name": "inquiry_scope",
+                "operation": "set",
+                "value": "handling advice for a second matter, unpriced"
+              },
+              {
+                "name": "assessment_needed",
+                "operation": "set",
+                "value": true
+              },
+              {
+                "name": "quote_authorized",
+                "operation": "not_set",
+                "value": null
+              }
+            ],
+            "commitment": {
+              "mode": "none",
+              "records": []
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED",
+              "USER-SHAPE-2026-09-03",
+              "G5",
+              "G1"
+            ]
+          }
+        },
+        {
+          "at_seconds": 320,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "你就估一个，我不会怪你。",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "consultation",
+              "operation": "keep",
+              "target_definition_id": null,
+              "after_definition_id": "consultation",
+              "after_stack_definition_ids": [
+                "rental",
+                "consultation"
+              ],
+              "phase": "advisory_scope"
+            },
+            "must": [
+              {
+                "id": "SC01-E05-M1",
+                "statement": "Route the pricing decision to a person and record why, without telling the customer a figure is being sought.",
+                "evidence": [
+                  "intent_records.manual_task",
+                  "generation.customer_visible_segments"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E05-M1",
+                  "input_paths": [
+                    "intent_records.manual_task",
+                    "generation.customer_visible_segments"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [
+              {
+                "id": "SC01-E05-F1",
+                "statement": "Do not price the request, and do not approve any departure from policy.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "policy.pricing_decision"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E05-F1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "policy.pricing_decision"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "slots": [],
+            "commitment": {
+              "mode": "required",
+              "records": [
+                {
+                  "type": "contact_or_ask_human",
+                  "party": "ai",
+                  "status": "active",
+                  "wait_state": "none",
+                  "condition": "a person decides whether this request can be priced"
+                }
+              ]
+            },
+            "escalation": {
+              "mode": "manual_task",
+              "reason_code": "pricing_requires_human",
+              "condition": "the frame's pricing is to_be_assessed and quote_authorized is not true"
+            },
+            "basis": [
+              "AUTHORED",
+              "G3"
+            ]
+          }
+        },
+        {
+          "at_seconds": 380,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "行，那这件事先放着。",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "consultation",
+              "operation": "complete",
+              "target_definition_id": null,
+              "after_definition_id": "consultation",
+              "after_stack_definition_ids": [
+                "rental",
+                "consultation"
+              ],
+              "phase": "advisory_resolved"
+            },
+            "must": [
+              {
+                "id": "SC01-E06-M1",
+                "statement": "Close the advisory frame on its own exit condition rather than on the customer losing interest.",
+                "evidence": [
+                  "aggregate.target_stack",
+                  "audit.target_stack_transition"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E06-M1",
+                  "input_paths": [
+                    "aggregate.target_stack",
+                    "audit.target_stack_transition"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [],
+            "slots": [],
+            "commitment": {
+              "mode": "none",
+              "records": []
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED",
+              "RFC-CE-17.1"
+            ]
+          }
+        },
+        {
+          "at_seconds": 430,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "还有别的要问的吗？",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "consultation",
+              "operation": "repair",
+              "target_definition_id": null,
+              "after_definition_id": "consultation",
+              "after_stack_definition_ids": [
+                "rental",
+                "consultation"
+              ],
+              "phase": "return_proposed"
+            },
+            "must": [
+              {
+                "id": "SC01-E07-M1",
+                "statement": "Propose returning to the rental goal, because the advisory frame's profile requires the return to be confirmed.",
+                "evidence": [
+                  "aggregate.target_stack",
+                  "generation.customer_visible_segments"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E07-M1",
+                  "input_paths": [
+                    "aggregate.target_stack",
+                    "generation.customer_visible_segments"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [
+              {
+                "id": "SC01-E07-F1",
+                "statement": "Do not restate or revise any figure while proposing the return.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "policy.pricing_decision"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E07-F1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "policy.pricing_decision"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "slots": [],
+            "commitment": {
+              "mode": "none",
+              "records": []
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED",
+              "RFC-CE-17.2"
+            ]
+          }
+        },
+        {
+          "at_seconds": 480,
+          "event_type": "customer_message",
+          "source_type": "text",
+          "text": "嗯，继续说借的事吧。",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "consultation",
+              "operation": "request_pop",
+              "target_definition_id": null,
+              "after_definition_id": "rental",
+              "after_stack_definition_ids": [
+                "rental"
+              ],
+              "phase": "returned_to_rental"
+            },
+            "must": [
+              {
+                "id": "SC01-E08-M1",
+                "statement": "Return to the rental goal with its recorded slots intact.",
+                "evidence": [
+                  "aggregate.target_stack",
+                  "understanding.slot_updates"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E08-M1",
+                  "input_paths": [
+                    "aggregate.target_stack",
+                    "understanding.slot_updates"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [
+              {
+                "id": "SC01-E08-F1",
+                "statement": "Do not re-ask for information the rental frame already holds.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "aggregate.target_stack"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E08-F1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "aggregate.target_stack"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "slots": [],
+            "commitment": {
+              "mode": "none",
+              "records": []
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED",
+              "RFC-CE-17.2"
+            ]
+          }
+        },
+        {
+          "at_seconds": 86520,
+          "event_type": "timer",
+          "source_type": "text",
+          "text": "",
+          "expected": {
+            "goal_frame": {
+              "before_definition_id": "rental",
+              "operation": "keep",
+              "target_definition_id": null,
+              "after_definition_id": "rental",
+              "after_stack_definition_ids": [
+                "rental"
+              ],
+              "phase": "return_due_reminder"
+            },
+            "must": [
+              {
+                "id": "SC01-E09-M1",
+                "statement": "Remind about the recorded return date once, within the profile's re-engagement limit, as a commitment the customer owes.",
+                "evidence": [
+                  "commitments.ledger",
+                  "policy.proactivity_decision"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E09-M1",
+                  "input_paths": [
+                    "commitments.ledger",
+                    "policy.proactivity_decision"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "forbid": [
+              {
+                "id": "SC01-E09-F1",
+                "statement": "Do not introduce a new price promise in a follow-up, and do not follow up again after an opt-out.",
+                "evidence": [
+                  "generation.customer_visible_segments",
+                  "policy.proactivity_decision"
+                ],
+                "predicate": {
+                  "evaluator_release": "assertion-rubric-v1",
+                  "rubric_id": "SC01-E09-F1",
+                  "input_paths": [
+                    "generation.customer_visible_segments",
+                    "policy.proactivity_decision"
+                  ],
+                  "operator": "rubric_passes",
+                  "expected_value": true
+                }
+              }
+            ],
+            "slots": [],
+            "commitment": {
+              "mode": "required",
+              "records": [
+                {
+                  "type": "take_action",
+                  "party": "customer",
+                  "status": "active",
+                  "wait_state": "awaiting_customer_input",
+                  "condition": "the customer returns the item by the recorded return date"
+                }
+              ]
+            },
+            "escalation": {
+              "mode": "none",
+              "reason_code": null,
+              "condition": null
+            },
+            "basis": [
+              "AUTHORED",
+              "USER-SHAPE-2026-09-03",
+              "G2",
+              "G4"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

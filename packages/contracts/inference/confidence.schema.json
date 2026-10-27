@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.invalid/contracts/inference/confidence.schema.json",
+  "title": "ConfidenceAssessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["raw_score", "calibrated_score", "assessment_version", "factor_codes"],
+  "properties": {
+    "raw_score": {"type": "number", "minimum": 0, "maximum": 1},
+    "calibrated_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "assessment_version": {"type": "string", "minLength": 1, "maxLength": 64},
+    "factor_codes": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "evidence_complete",
+          "evidence_missing",
+          "slot_conflict",
+          "low_signal_input",
+          "ambiguous_intent",
+          "policy_constrained",
+          "deterministic_output",
+          "fallback_applied"
+        ]
+      }
+    }
+  }
+}

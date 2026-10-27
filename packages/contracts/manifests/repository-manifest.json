@@ -1,0 +1,800 @@
+[
+  {
+    "repository": "tenant.resolve_login",
+    "resource": "tenant",
+    "scope_required": false,
+    "auth_bootstrap": true,
+    "tables": [
+      "tenants"
+    ],
+    "assertions": [
+      "AUTH-TENANT-001",
+      "RLS-TENANT-001"
+    ]
+  },
+  {
+    "repository": "tenant.list_active_for_worker",
+    "resource": "tenant",
+    "scope_required": false,
+    "service_bootstrap": true,
+    "tables": [
+      "tenants"
+    ],
+    "assertions": [
+      "WORKER-TENANT-001",
+      "RLS-TENANT-002"
+    ]
+  },
+  {
+    "repository": "channel_binding.resolve",
+    "resource": "channel_config",
+    "scope_required": false,
+    "auth_bootstrap": true,
+    "tables": [
+      "channel_bindings"
+    ],
+    "assertions": [
+      "INGRESS-BINDING-001",
+      "RLS-CHANNEL-001"
+    ]
+  },
+  {
+    "repository": "channel_binding.list",
+    "resource": "channel_config",
+    "scope_required": true,
+    "tables": [
+      "channel_bindings"
+    ],
+    "assertions": [
+      "RLS-CHANNEL-002"
+    ]
+  },
+  {
+    "repository": "channel_binding.repin",
+    "resource": "channel_config",
+    "scope_required": true,
+    "tables": [
+      "channel_bindings",
+      "conversation_aggregates",
+      "scheduled_events"
+    ],
+    "assertions": [
+      "RLS-CHANNEL-001"
+    ]
+  },
+  {
+    "repository": "channel_binding.deactivate",
+    "resource": "channel_config",
+    "scope_required": true,
+    "tables": [
+      "channel_bindings",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-CHANNEL-003"
+    ]
+  },
+  {
+    "repository": "channel_binding.update",
+    "resource": "channel_config",
+    "scope_required": true,
+    "tables": [
+      "channel_bindings",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-CHANNEL-004"
+    ]
+  },
+  {
+    "repository": "channel_binding.register_credential",
+    "resource": "channel_config",
+    "scope_required": true,
+    "tables": [
+      "channel_bindings"
+    ],
+    "assertions": [
+      "RLS-CHANNEL-005"
+    ]
+  },
+  {
+    "repository": "profile.publish",
+    "resource": "profile_release",
+    "scope_required": true,
+    "tables": [
+      "profile_releases",
+      "audit_events"
+    ],
+    "assertions": [
+      "PROFILE-PUBLISH-001",
+      "PROFILE-IMMUTABLE-001",
+      "RLS-PROFILE-001"
+    ]
+  },
+  {
+    "repository": "profile.resolve",
+    "resource": "profile_release",
+    "scope_required": true,
+    "tables": [
+      "profile_releases"
+    ],
+    "assertions": [
+      "PROFILE-RESOLVE-001",
+      "RLS-PROFILE-002"
+    ]
+  },
+  {
+    "repository": "employee.login",
+    "resource": "session",
+    "scope_required": true,
+    "tables": [
+      "employees",
+      "employee_sessions"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-001"
+    ]
+  },
+  {
+    "repository": "session.refresh",
+    "resource": "session",
+    "scope_required": true,
+    "tables": [
+      "refresh_tokens",
+      "employees"
+    ],
+    "assertions": [
+      "RLS-REFRESH-001"
+    ]
+  },
+  {
+    "repository": "employee_session.read",
+    "resource": "session",
+    "scope_required": true,
+    "tables": [
+      "employees",
+      "employee_sessions"
+    ],
+    "assertions": [
+      "RLS-SESSION-001"
+    ]
+  },
+  {
+    "repository": "employee_session.delete",
+    "resource": "session",
+    "scope_required": true,
+    "tables": [
+      "employee_sessions"
+    ],
+    "assertions": [
+      "RLS-SESSION-002"
+    ]
+  },
+  {
+    "repository": "ws_ticket.create",
+    "resource": "websocket_ticket",
+    "scope_required": true,
+    "tables": [
+      "ws_tickets"
+    ],
+    "assertions": [
+      "RLS-TICKET-001"
+    ]
+  },
+  {
+    "repository": "ws_ticket.consume",
+    "resource": "websocket_ticket",
+    "scope_required": true,
+    "tables": [
+      "ws_tickets"
+    ],
+    "assertions": [
+      "RLS-TICKET-002"
+    ]
+  },
+  {
+    "repository": "inbox.create",
+    "resource": "inbox_event",
+    "scope_required": true,
+    "tables": [
+      "ingress_replay_keys",
+      "inbox_events"
+    ],
+    "assertions": [
+      "INGRESS-REPLAY-001",
+      "RLS-INBOX-001"
+    ]
+  },
+  {
+    "repository": "inbox.claim",
+    "resource": "inbox_event",
+    "scope_required": true,
+    "tables": [
+      "inbox_events",
+      "conversation_aggregates"
+    ],
+    "assertions": [
+      "RLS-INBOX-002",
+      "RLS-AGGREGATE-001"
+    ]
+  },
+  {
+    "repository": "conversation_aggregate.detail",
+    "resource": "conversation_aggregate",
+    "scope_required": true,
+    "tables": [
+      "conversation_aggregates"
+    ],
+    "assertions": [
+      "RLS-AGGREGATE-002"
+    ]
+  },
+  {
+    "repository": "conversation_takeover.create",
+    "resource": "conversation_takeover",
+    "scope_required": true,
+    "tables": [
+      "conversation_aggregates",
+      "scheduled_events",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-AGGREGATE-003"
+    ]
+  },
+  {
+    "repository": "conversation_message.create",
+    "resource": "conversation_message",
+    "scope_required": true,
+    "tables": [
+      "conversation_aggregates",
+      "intent_records",
+      "policy_decisions",
+      "outbox_messages"
+    ],
+    "assertions": [
+      "RLS-AGGREGATE-007"
+    ]
+  },
+  {
+    "repository": "conversation_resume.create",
+    "resource": "conversation_resume",
+    "scope_required": true,
+    "tables": [
+      "conversation_aggregates",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-AGGREGATE-004"
+    ]
+  },
+  {
+    "repository": "conversation_slot.write",
+    "resource": "conversation_slot",
+    "scope_required": true,
+    "tables": [
+      "conversation_aggregates",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-AGGREGATE-005"
+    ]
+  },
+  {
+    "repository": "manual_task.create",
+    "resource": "manual_task",
+    "scope_required": true,
+    "tables": [
+      "manual_tasks",
+      "conversation_aggregates",
+      "employees",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-MANUAL-TASK-001"
+    ]
+  },
+  {
+    "repository": "manual_task.list",
+    "resource": "manual_task",
+    "scope_required": true,
+    "tables": [
+      "manual_tasks",
+      "conversation_aggregates"
+    ],
+    "assertions": [
+      "RLS-MANUAL-TASK-002"
+    ]
+  },
+  {
+    "repository": "manual_task.claim",
+    "resource": "manual_task",
+    "scope_required": true,
+    "tables": [
+      "manual_tasks",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-MANUAL-TASK-003"
+    ]
+  },
+  {
+    "repository": "manual_task.resolve",
+    "resource": "manual_task_resolution",
+    "scope_required": true,
+    "tables": [
+      "manual_tasks",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-MANUAL-TASK-004"
+    ]
+  },
+  {
+    "repository": "manual_task.reassign",
+    "resource": "manual_task_reassignment",
+    "scope_required": true,
+    "tables": [
+      "manual_tasks",
+      "employees",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-MANUAL-TASK-005"
+    ]
+  },
+  {
+    "repository": "manual_task.cancel",
+    "resource": "manual_task",
+    "scope_required": true,
+    "tables": [
+      "manual_tasks",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-MANUAL-TASK-006"
+    ]
+  },
+  {
+    "repository": "conversation_aggregate.list",
+    "resource": "conversation_aggregate",
+    "scope_required": true,
+    "tables": [
+      "conversation_aggregates",
+      "contacts",
+      "inbox_events",
+      "outbox_messages",
+      "employee_read_cursors",
+      "scheduled_events",
+      "manual_tasks"
+    ],
+    "assertions": [
+      "RLS-AGGREGATE-006"
+    ]
+  },
+  {
+    "repository": "contact.list",
+    "resource": "contact",
+    "scope_required": true,
+    "tables": [
+      "contacts"
+    ],
+    "assertions": [
+      "CONTACT-ROUTE-001"
+    ]
+  },
+  {
+    "repository": "contact.read",
+    "resource": "contact",
+    "scope_required": true,
+    "tables": [
+      "contacts"
+    ],
+    "assertions": [
+      "CONTACT-ROUTE-002"
+    ]
+  },
+  {
+    "repository": "contact.by_conversation",
+    "resource": "contact",
+    "scope_required": true,
+    "tables": [
+      "contacts",
+      "conversation_aggregates"
+    ],
+    "assertions": [
+      "CONTACT-ROUTE-003"
+    ]
+  },
+  {
+    "repository": "control_policy.read",
+    "resource": "control_policy",
+    "scope_required": true,
+    "tables": [
+      "tenants"
+    ],
+    "assertions": [
+      "CONTROL-POLICY-ROUTE-001"
+    ]
+  },
+  {
+    "repository": "control_policy.update",
+    "resource": "control_policy",
+    "scope_required": true,
+    "tables": [
+      "tenants",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-TENANT-007"
+    ]
+  },
+  {
+    "repository": "scheduled_event.claim",
+    "resource": "scheduled_event",
+    "scope_required": true,
+    "tables": [
+      "scheduled_events",
+      "inbox_events"
+    ],
+    "assertions": [
+      "RLS-SCHEDULE-001"
+    ]
+  },
+  {
+    "repository": "tenant.read_current",
+    "resource": "tenant",
+    "scope_required": true,
+    "tables": [
+      "tenants"
+    ],
+    "assertions": [
+      "RLS-TENANT-003"
+    ]
+  },
+  {
+    "repository": "employee.list",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-002"
+    ]
+  },
+  {
+    "repository": "employee.stats",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-003"
+    ]
+  },
+  {
+    "repository": "employee.detail_stats",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees",
+      "employee_sessions"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-004"
+    ]
+  },
+  {
+    "repository": "employee.create",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-007"
+    ]
+  },
+  {
+    "repository": "employee.update_profile",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-005"
+    ]
+  },
+  {
+    "repository": "employee.deactivate",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees",
+      "employee_sessions",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-006"
+    ]
+  },
+  {
+    "repository": "employee.purge",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees",
+      "employee_roles",
+      "employee_sessions",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-PURGE-001"
+    ]
+  },
+  {
+    "repository": "employee.replace_roles",
+    "resource": "employee_role",
+    "scope_required": true,
+    "tables": [
+      "employees",
+      "employee_roles",
+      "roles",
+      "employee_sessions",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-010"
+    ]
+  },
+  {
+    "repository": "employee.password_reset",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees",
+      "employee_sessions",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-008"
+    ]
+  },
+  {
+    "repository": "employee.change_own_password",
+    "resource": "employee",
+    "scope_required": true,
+    "tables": [
+      "employees",
+      "employee_sessions",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-EMPLOYEE-009"
+    ]
+  },
+  {
+    "repository": "role.list",
+    "resource": "role",
+    "scope_required": true,
+    "tables": [
+      "roles"
+    ],
+    "assertions": [
+      "RLS-ROLE-001"
+    ]
+  },
+  {
+    "repository": "role.create",
+    "resource": "role",
+    "scope_required": true,
+    "tables": [
+      "roles"
+    ],
+    "assertions": [
+      "RLS-ROLE-002"
+    ]
+  },
+  {
+    "repository": "role.replace_permissions",
+    "resource": "role",
+    "scope_required": true,
+    "tables": [
+      "roles"
+    ],
+    "assertions": [
+      "RLS-ROLE-003",
+      "ROLE-GUARD-001"
+    ]
+  },
+  {
+    "repository": "role.delete",
+    "resource": "role",
+    "scope_required": true,
+    "tables": [
+      "roles",
+      "employee_roles"
+    ],
+    "assertions": [
+      "RLS-ROLE-004",
+      "ROLE-GUARD-002"
+    ]
+  },
+  {
+    "repository": "tenant_registry.list",
+    "resource": "tenant_registry",
+    "scope_required": false,
+    "tables": [
+      "tenants",
+      "platform_audit_events"
+    ],
+    "assertions": [
+      "RLS-TENANT-005"
+    ]
+  },
+  {
+    "repository": "tenant_registry.provision",
+    "resource": "tenant_registry",
+    "scope_required": false,
+    "tables": [
+      "tenants",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-TENANT-004"
+    ]
+  },
+  {
+    "repository": "tenant.deactivate",
+    "resource": "tenant",
+    "scope_required": true,
+    "tables": [
+      "tenants",
+      "employee_sessions",
+      "channel_bindings",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-TENANT-006"
+    ]
+  },
+  {
+    "repository": "tenant.purge",
+    "resource": "tenant",
+    "scope_required": true,
+    "tables": [
+      "tenants",
+      "tenant_purge_jobs",
+      "audit_events"
+    ],
+    "assertions": [
+      "RLS-TENANT-008"
+    ]
+  },
+  {
+    "repository": "message.page",
+    "resource": "message",
+    "scope_required": true,
+    "tables": [
+      "inbox_events",
+      "outbox_messages",
+      "conversation_aggregates"
+    ],
+    "assertions": [
+      "RLS-INBOX-003"
+    ]
+  },
+  {
+    "repository": "conversation_read_cursor.update",
+    "resource": "conversation_read_cursor",
+    "scope_required": true,
+    "tables": [
+      "employee_read_cursors",
+      "conversation_aggregates",
+      "inbox_events",
+      "outbox_messages"
+    ],
+    "assertions": [
+      "RLS-READ-CURSOR-001"
+    ]
+  },
+  {
+    "repository": "tenant_manager_contact.upsert",
+    "resource": "tenant_manager_contact",
+    "scope_required": true,
+    "tables": [
+      "tenant_manager_contacts"
+    ],
+    "assertions": [
+      "RLS-TENANT-009"
+    ]
+  },
+  {
+    "repository": "material.read",
+    "resource": "material",
+    "scope_required": true,
+    "tables": [
+      "materials",
+      "profile_releases",
+      "channel_bindings",
+      "conversation_aggregates"
+    ],
+    "assertions": [
+      "MATERIAL-ROUTE-001",
+      "RLS-MATERIAL-001"
+    ]
+  },
+  {
+    "repository": "material.invalidate",
+    "resource": "material",
+    "scope_required": true,
+    "tables": [
+      "materials",
+      "profile_releases",
+      "channel_bindings",
+      "conversation_aggregates",
+      "audit_events"
+    ],
+    "assertions": [
+      "MATERIAL-ROUTE-003"
+    ]
+  },
+  {
+    "repository": "contact_memory.read",
+    "resource": "contact_memory",
+    "scope_required": true,
+    "tables": [
+      "contact_memories",
+      "contacts"
+    ],
+    "assertions": [
+      "MEMORY-ROUTE-001",
+      "RLS-MEMORY-001"
+    ]
+  },
+  {
+    "repository": "contact_memory.create",
+    "resource": "contact_memory",
+    "scope_required": true,
+    "tables": [
+      "contact_memories",
+      "contacts",
+      "channel_bindings",
+      "profile_releases",
+      "audit_events"
+    ],
+    "assertions": [
+      "MEMORY-ROUTE-002",
+      "MEMORY-ROUTE-003"
+    ]
+  },
+  {
+    "repository": "contact_memory.revise",
+    "resource": "contact_memory",
+    "scope_required": true,
+    "tables": [
+      "contact_memories",
+      "contacts",
+      "audit_events"
+    ],
+    "assertions": [
+      "MEMORY-ROUTE-004"
+    ]
+  },
+  {
+    "repository": "contact_memory.invalidate",
+    "resource": "contact_memory",
+    "scope_required": true,
+    "tables": [
+      "contact_memories",
+      "contacts",
+      "audit_events"
+    ],
+    "assertions": [
+      "MEMORY-ROUTE-005"
+    ]
+  }
+]

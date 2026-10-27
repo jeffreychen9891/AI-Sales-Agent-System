@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.invalid/contracts/inference/generation-result.schema.json",
+  "title": "GenerationResult",
+  "description": "Output of the generation step. Customer-visible text remains a draft until delivery; generation may not add intents or change the planned strategy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "origin",
+    "strategy_id",
+    "customer_visible_segments",
+    "proposed_intents",
+    "confidence",
+    "claims",
+    "return_confirmation",
+    "safety_markers",
+    "model_evidence"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "origin": {"enum": ["model", "safe_fallback"]},
+    "strategy_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "customer_visible_segments": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "content_or_ref"],
+        "properties": {
+          "type": {"enum": ["text", "material_ref"]},
+          "content_or_ref": {"type": "string", "minLength": 1, "maxLength": 4000}
+        }
+      }
+    },
+    "proposed_intents": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "typed_payload", "evidence_refs"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "send_message",
+              "send_material",
+              "remember",
+              "schedule_event",
+              "cancel_event",
+              "reschedule_event",
+              "quote",
+              "create_order",
+              "update_order",
+              "followup",
+              "handoff",
+              "manual_task"
+            ]
+          },
+          "typed_payload": {
+            "description": "Free-form per kind, and deliberately left unconstrained (ADR-0095 section 6, 2026-09-07). What the send path needs is stated here rather than validated: a send_message payload must carry a `content` object. A payload without one is refused proposal by proposal in `_decide_proposal`, reason code GENERATION_PAYLOAD_INCOMPLETE (T110) -- not by failing this schema, because a schema failure takes the whole plan down and loses which proposal was at fault.",
+            "type": "object"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {"type": "string", "minLength": 1, "maxLength": 200}
+          }
+        }
+      }
+    },
+    "confidence": {"$ref": "https://fastagent.invalid/contracts/inference/confidence.schema.json"},
+    "claims": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text_hash", "source_evidence_refs"],
+        "properties": {
+          "text_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "source_evidence_refs": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {"type": "string", "minLength": 1, "maxLength": 200}
+          },
+          "commitment_id": {"type": ["string", "null"], "format": "uuid"}
+        }
+      }
+    },
+    "return_confirmation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["included", "tone_material_ref"],
+      "properties": {
+        "included": {"type": "boolean"},
+        "tone_material_ref": {"type": ["string", "null"], "maxLength": 200}
+      }
+    },
+    "safety_markers": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "none",
+          "contains_price",
+          "contains_commitment",
+          "contains_material_ref",
+          "requires_human_review",
+          "identity_unverified"
+        ]
+      }
+    },
+    "model_evidence": {"$ref": "https://fastagent.invalid/contracts/inference/model-evidence.schema.json"}
+  }
+}

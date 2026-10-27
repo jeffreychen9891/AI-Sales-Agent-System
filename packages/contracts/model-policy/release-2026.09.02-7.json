@@ -1,0 +1,365 @@
+{
+  "schema_version": "1.1.0",
+  "release_id": "0000000f-0007-4000-8000-000000000007",
+  "version": "2026.09.02-7",
+  "issued_at": "2026-09-17T23:30:00+08:00",
+  "status": "superseded",
+  "envelope_deadline_ms": 30000,
+  "roles": {
+    "UNDERSTAND_VALUE": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-responses-v1",
+      "structured_output": "json_schema",
+      "output_contract": "understanding-result",
+      "region": "cn",
+      "context_limit_tokens": 1000000,
+      "deadline_ms": 6000,
+      "fallback": [],
+      "failure_action": "clarify",
+      "price_cny_per_million_tokens": {
+        "currency": "CNY",
+        "unit_tokens": 1000000,
+        "effective_from": "2026-08-17T00:00:00+08:00",
+        "timezone": "Asia/Shanghai",
+        "peak_periods": [
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "14:00",
+            "end": "18:00"
+          }
+        ],
+        "input_cached": {
+          "offpeak": 0.05,
+          "peak": 0.1
+        },
+        "input_uncached": {
+          "offpeak": 1.5,
+          "peak": 3
+        },
+        "output": {
+          "offpeak": 4.5,
+          "peak": 9
+        },
+        "source_url": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/"
+      },
+      "provenance": "2026-09-02 V4 Flash Responses JSON Schema replay UNDERSTAND_VALUE 6/6；显式非思考。",
+      "max_output_tokens": 1024,
+      "requested_alias": "deepseek-chat",
+      "temperature": 0.2,
+      "thinking_mode": "disabled"
+    },
+    "PLAN_CAPABILITY": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-responses-v1",
+      "structured_output": "json_schema",
+      "output_contract": "plan-result",
+      "region": "cn",
+      "context_limit_tokens": 1000000,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "manual_review",
+      "price_cny_per_million_tokens": {
+        "currency": "CNY",
+        "unit_tokens": 1000000,
+        "effective_from": "2026-08-17T00:00:00+08:00",
+        "timezone": "Asia/Shanghai",
+        "peak_periods": [
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "14:00",
+            "end": "18:00"
+          }
+        ],
+        "input_cached": {
+          "offpeak": 0.05,
+          "peak": 0.1
+        },
+        "input_uncached": {
+          "offpeak": 1.5,
+          "peak": 3
+        },
+        "output": {
+          "offpeak": 4.5,
+          "peak": 9
+        },
+        "source_url": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/"
+      },
+      "provenance": "2026-09-02 V4 Flash Responses JSON Schema replay PLAN_CAPABILITY 6/6；显式非思考。",
+      "max_output_tokens": 2048,
+      "requested_alias": "deepseek-chat",
+      "temperature": 0,
+      "thinking_mode": "disabled"
+    },
+    "GENERATE_VALUE": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-responses-v1",
+      "structured_output": "json_schema",
+      "output_contract": "generation-result",
+      "region": "cn",
+      "context_limit_tokens": 1000000,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "clarify",
+      "price_cny_per_million_tokens": {
+        "currency": "CNY",
+        "unit_tokens": 1000000,
+        "effective_from": "2026-08-17T00:00:00+08:00",
+        "timezone": "Asia/Shanghai",
+        "peak_periods": [
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "14:00",
+            "end": "18:00"
+          }
+        ],
+        "input_cached": {
+          "offpeak": 0.05,
+          "peak": 0.1
+        },
+        "input_uncached": {
+          "offpeak": 1.5,
+          "peak": 3
+        },
+        "output": {
+          "offpeak": 4.5,
+          "peak": 9
+        },
+        "source_url": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/"
+      },
+      "provenance": "2026-09-02 V4 Flash Responses JSON Schema replay GENERATE_VALUE 6/6；显式非思考。",
+      "max_output_tokens": 1024,
+      "requested_alias": "deepseek-chat",
+      "temperature": 0.7,
+      "thinking_mode": "disabled"
+    },
+    "COMMITMENT_CAPABILITY": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-responses-v1",
+      "structured_output": "json_schema",
+      "output_contract": "plan-result",
+      "region": "cn",
+      "context_limit_tokens": 1000000,
+      "deadline_ms": 6000,
+      "fallback": [],
+      "failure_action": "manual_review",
+      "price_cny_per_million_tokens": {
+        "currency": "CNY",
+        "unit_tokens": 1000000,
+        "effective_from": "2026-08-17T00:00:00+08:00",
+        "timezone": "Asia/Shanghai",
+        "peak_periods": [
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "14:00",
+            "end": "18:00"
+          }
+        ],
+        "input_cached": {
+          "offpeak": 0.05,
+          "peak": 0.1
+        },
+        "input_uncached": {
+          "offpeak": 1.5,
+          "peak": 3
+        },
+        "output": {
+          "offpeak": 4.5,
+          "peak": 9
+        },
+        "source_url": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/"
+      },
+      "provenance": "2026-09-02 V4 Flash Responses JSON Schema replay COMMITMENT_CAPABILITY 6/6；显式非思考。",
+      "max_output_tokens": 768,
+      "requested_alias": "deepseek-chat",
+      "temperature": 0,
+      "thinking_mode": "disabled"
+    },
+    "VISION": {
+      "provider_id": "deepseek",
+      "model_id": "deepseek-v4-flash-vision-exp",
+      "api_base": "https://api.deepseek.com",
+      "api_compatibility": "openai-chat-completions-v1",
+      "structured_output": "json_object",
+      "region": "cn",
+      "context_limit_tokens": 1000000,
+      "deadline_ms": 8000,
+      "fallback": [],
+      "failure_action": "no_message",
+      "price_cny_per_million_tokens": {
+        "currency": "CNY",
+        "unit_tokens": 1000000,
+        "effective_from": "2026-08-17T00:00:00+08:00",
+        "timezone": "Asia/Shanghai",
+        "peak_periods": [
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "weekdays": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "start": "14:00",
+            "end": "18:00"
+          }
+        ],
+        "input_cached": {
+          "offpeak": 0.05,
+          "peak": 0.1
+        },
+        "input_uncached": {
+          "offpeak": 1.5,
+          "peak": 3
+        },
+        "output": {
+          "offpeak": 4.5,
+          "peak": 9
+        },
+        "source_url": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/"
+      },
+      "provenance": "沿用 v1 现状，待 M1a 实测后重估；不可用时降级为纯文本处理，不改 intent 官网 2026-09 价目已核验；实时调用显式 thinking=disabled。",
+      "max_output_tokens": 1024,
+      "temperature": 0.7,
+      "requested_alias": null,
+      "thinking_mode": "disabled"
+    }
+  },
+  "embedding": {
+    "provider_id": "volcengine-ark",
+    "model_id": "doubao-embedding-vision-251215",
+    "api_base": "https://ark.cn-beijing.volces.com/api/v3",
+    "region": "cn-beijing",
+    "dimension": 2048,
+    "distance_metric": "cosine",
+    "normalization": "l2",
+    "truncation_policy": "reject-over-limit",
+    "pricing": {
+      "currency": "CNY",
+      "unit_tokens": 1000000,
+      "text_input": 0.7,
+      "image_input": 1.8,
+      "image_token_formula": "min(width*height/784, 1312)",
+      "source": "用户提供的豆包 2026-09 官网价目"
+    },
+    "credential_status": "verified"
+  },
+  "ceilings_cny": {
+    "soft_daily": 36.4,
+    "hard_daily": 91,
+    "soft_monthly": 1092,
+    "hard_monthly": 2730,
+    "soft_conversation": 0.6,
+    "hard_conversation": 1.0,
+    "enforcement_active": true,
+    "provenance": "会话软顶 2026-09-17 由 0.4 抬到 0.6（硬顶的 60%）。0.4 对实测正常会话0.274191 只有 1.46 倍余量，长一点的会话照样告警 —— 一个总在响的告警等于没有。硬顶 1.0 不动。日/月上限仍是 2026-09-02 确认的 Stage 值。"
+  },
+  "unverified_fields": [],
+  "provenance": "V4 Flash 实时 release：OpenAI Responses JSON Schema、显式非思考。2026-09-02 每角色6个多样样本均合同 6/6，24/24 completed、0 截断、P95 1.31-1.97s。取代 2026.09.02-6：**只改会话软顶**（0.4 → 0.6），其余与 -6 逐字一致。起因：运维报 EMBEDDING 侧告警（那是对旧的 0.11 说的，现已不成立），复核留给作者的问题是「软顶是不是按还没有知识库的时候定的」——答案是。"
+}

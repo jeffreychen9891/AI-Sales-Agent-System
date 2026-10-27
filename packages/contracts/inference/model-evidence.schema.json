@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.invalid/contracts/inference/model-evidence.schema.json",
+  "title": "ModelEvidence",
+  "description": "Per-step model provenance. Carries no prompt or response content and no credential.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["provider", "model", "prompt_release", "latency_ms", "token_usage"],
+  "properties": {
+    "provider": {"type": "string", "minLength": 1, "maxLength": 64},
+    "model": {"type": "string", "minLength": 1, "maxLength": 128},
+    "prompt_release": {"type": "string", "minLength": 1, "maxLength": 128},
+    "latency_ms": {"type": "integer", "minimum": 0},
+    "token_usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "output"],
+      "properties": {
+        "input": {"type": "integer", "minimum": 0},
+        "output": {"type": "integer", "minimum": 0},
+        "cached_input": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

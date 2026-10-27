@@ -1,0 +1,250 @@
+{
+  "identity": {
+    "profile_id": "synthetic-service-desk",
+    "release_id": "11111111-1111-4111-8111-000100000004",
+    "version": "1.0.4",
+    "content_hash": "5f1a8805e8711914882847c1915811d992d2fd9bcde2652ee08d224024b41993"
+  },
+  "target_frames": [
+    {
+      "id": "welcome",
+      "goal": "Understand why the customer contacted the service desk",
+      "exit_conditions": [
+        {
+          "slot": "request_summary",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "request_summary",
+          "type": "string",
+          "required": true,
+          "description": "Why the customer contacted the service desk, in one line."
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "ask_slot",
+        "advance_goal",
+        "wait"
+      ],
+      "content_materials": [
+        "material:neutral-welcome:v1"
+      ],
+      "time_rules": [
+        {
+          "id": "welcome-silence_check",
+          "emit_kind": "silence_check",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 75
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "advance_goal"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "required"
+      }
+    },
+    {
+      "id": "clarify_request",
+      "goal": "Collect one missing detail needed to route the request",
+      "exit_conditions": [
+        {
+          "slot": "routing_detail",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "routing_detail",
+          "type": "string",
+          "required": true,
+          "description": "The one missing detail needed to route the request."
+        }
+      ],
+      "allowed_strategy_set": [
+        "ask_slot",
+        "answer_question",
+        "confirm_resume",
+        "wait"
+      ],
+      "content_materials": [
+        "material:neutral-clarification:v1"
+      ],
+      "time_rules": [
+        {
+          "id": "clarify_request-followup_due",
+          "emit_kind": "followup_due",
+          "due": {
+            "anchor": "last_outbound_at",
+            "offset_seconds": 86400
+          },
+          "dedupe_template": "{emit_kind}:{target_frame_id}",
+          "cancel_on": [
+            "customer_message",
+            "human_takeover",
+            "frame_exit",
+            "profile_repin"
+          ],
+          "strategy": "propose_followup"
+        }
+      ],
+      "return_confirmation": {
+        "policy": "optional"
+      },
+      "time_rule_strategy_set": [
+        "propose_followup"
+      ]
+    },
+    {
+      "id": "closing",
+      "goal": "Close the exchange once the root goal is satisfied",
+      "exit_conditions": [
+        {
+          "slot": "closing_acknowledged",
+          "present": true
+        }
+      ],
+      "information_slots": [
+        {
+          "name": "closing_acknowledged",
+          "type": "boolean",
+          "required": false,
+          "description": "The customer agreed the exchange can end."
+        }
+      ],
+      "allowed_strategy_set": [
+        "acknowledge",
+        "wait"
+      ],
+      "content_materials": [
+        "material:neutral-closing:v1"
+      ],
+      "time_rules": [],
+      "return_confirmation": {
+        "policy": "optional"
+      }
+    }
+  ],
+  "strategies": {
+    "acknowledge": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "no_new_commitment"
+      ]
+    },
+    "ask_slot": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "one_question"
+      ]
+    },
+    "advance_goal": {
+      "required_slots": [
+        "request_summary"
+      ],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "current_goal_only"
+      ]
+    },
+    "wait": {
+      "required_slots": [],
+      "allowed_intent_kinds": [],
+      "generation_constraints": []
+    },
+    "answer_question": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "evidence_required"
+      ]
+    },
+    "confirm_resume": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "confirmation_only"
+      ]
+    },
+    "propose_followup": {
+      "required_slots": [],
+      "allowed_intent_kinds": [
+        "send_message"
+      ],
+      "generation_constraints": [
+        "current_goal_only",
+        "no_new_commitment"
+      ]
+    }
+  },
+  "proactivity_policy": {
+    "active_window_seconds": 1800,
+    "reengagement_limits": {
+      "window_seconds": 86400,
+      "max_delivered": 1
+    },
+    "quiet_hours": {
+      "timezone": "Asia/Shanghai",
+      "ranges": [
+        {
+          "start": "22:30",
+          "end": "08:00"
+        }
+      ]
+    },
+    "exit_signals": [
+      "explicit_opt_out",
+      "complaint",
+      "human_takeover"
+    ],
+    "rhythm_templates": [
+      {
+        "id": "neutral",
+        "max_consecutive": 1
+      }
+    ]
+  },
+  "knowledge_bindings": [
+    "knowledge:service-desk-faq:v1"
+  ],
+  "policy_bindings": {
+    "authorization": "policy:authorization:v1",
+    "human_control": "policy:human-control:v1"
+  },
+  "outcome_rules": [],
+  "annotation_taxonomy": [],
+  "confidence_gate_policy_ref": "policy:confidence-observe:v1",
+  "manipulation_context_refs": [],
+  "assist_policy": {
+    "enabled_in_human_mode": false,
+    "allowed_strategy_set": [],
+    "expiry_seconds": 0
+  },
+  "golden_manifest": [
+    "m0-customer-message",
+    "m0-timer-envelope"
+  ],
+  "closing_frame_ref": "closing"
+}

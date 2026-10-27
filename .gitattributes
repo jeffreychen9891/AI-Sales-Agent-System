@@ -1,0 +1,26 @@
+* text=auto
+*.py text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+# **前端源码也钉 LF，理由比「统一风格」具体。**
+# `scripts/check-api-client.mjs` 把仓里的 `src/api/schema.d.ts` 与现场重新
+# 生成的那一份**逐字节**比。生成器写 LF；而这些后缀若不钉住，新克隆出来
+# 是 CRLF —— 于是那条闸会在一台干净机器上**假红**，而日志里看起来像漂移。
+# 同样的理由适用于 `check-i18n` 将来要比的那些目录文件。
+*.ts text eol=lf
+*.tsx text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+# 消息目录：`check-i18n.mjs` 比对它。那道闸自己做了行尾归一，所以
+# 不钉也不会假红 —— 钉住是为了让 `git status` 不因为一次 checkout 就脏。
+*.po text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.lock text eol=lf
+Dockerfile text eol=lf
+*.conf.example text eol=lf
+*.cron text eol=lf

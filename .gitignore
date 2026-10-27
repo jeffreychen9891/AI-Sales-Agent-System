@@ -1,0 +1,48 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+.mypy_cache/
+.idea/
+.vscode/
+evidence/runtime/
+infrastructure/stage/*.env
+!infrastructure/stage/*.env.example
+infrastructure/stage/*.password
+infrastructure/stage/restore-point.json
+infrastructure/stage/backups/
+
+# Per-checkout devloop stack env (generated passwords -- never committed).
+.devloop-env
+
+# SSH private keys. Never committed, and named here because one was handed over
+# by dropping it at the repository root -- which is a perfectly reasonable thing
+# for a person to do and a perfectly bad place for the file to sit.
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# 供应商给的原始参考资料：含未打码的密钥样本值，check_secrets 会拒。
+# 见 docs/wecom-proxy-message-callback.md「原文有意不入库」。
+wecom-proxy-message.md
+
+# 本机才有的输入：**进得来、不进仓**。
+#
+# 今天住着演示那段视频（`local/demo-assets/product-demo-video.mp4`）——
+# 它几十 MB，进了 git 历史就只能改写历史才拿得掉，而 `build_demo_assets.py`
+# 开头第一段本来就写着二进制不进仓。
+#
+# **忽略的是整个目录，不是某个文件名**：一条按文件名写的规则，
+# 下一个往同一个地方放东西的人不会知道它存在。
+/local/

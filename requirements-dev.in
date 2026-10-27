@@ -1,0 +1,11 @@
+-r requirements.in
+mypy>=1.14
+pytest>=8.3
+pytest-asyncio>=0.25
+pytest-cov>=6.0
+# 门禁里「用例不许连外网」那道闸的执行者，由 pyproject 的
+# `--allow-hosts` 启用。它不装，pytest 就起不来（`--strict-config`）——
+# 这是有意的：没有执行者时应当没有门禁，而不是有一道不响的门禁。
+pytest-socket>=0.8
+ruff>=0.9
+types-jsonschema>=4.23

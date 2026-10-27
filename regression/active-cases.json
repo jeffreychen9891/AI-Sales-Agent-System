@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "execution_sequence": {
+    "current_step": 4,
+    "mandatory_replay_after_step": 5,
+    "step_5_foundations": [
+      "target_stack_write_path",
+      "merchant_profile_registry",
+      "merchant_profile_resolver"
+    ],
+    "runner_present": true,
+    "runner": "scripts/replay_regression.py",
+    "note": "The step-5 foundations have landed and the executor exists (scripts/replay_regression.py). The active carrier is synthetic: ADR-0039 retired the retired corpus, and G1-G5 were extracted to regression/invariants.json so they outlive it. The replay still refuses -- no release has been published for the carrier profile and no rubric judge exists -- but it now refuses over a real case rather than over an empty set.",
+    "runner_note": "replay_regression.decide / unregistered_input_paths / structural_expectations / mechanical_verdict / MECHANICAL_SCREENS / screened_verdict have no caller outside tests today; the execution loop is their consumer and it is not written yet. Registered here so a dead-code scan reads them as pending rather than orphaned (independent review 2026-09-03, P3-2; ADR-0037 requires self-reviews to answer the zero-caller question). The screen and the composition rule were added by the negative-fixtures batch and left off this list, which is the same omission a second time (its own independent review, P2-1); screened_verdict is the contract the execution loop is meant to call rather than calling decide() directly.",
+    "invariants": "regression/invariants.json"
+  },
+  "active_cases": [
+    {
+      "case_file": "regression/cases/synthetic-carrier-v1-2026-09-03.json",
+      "profile_release": "synthetic-two-axis-desk",
+      "rubric_registry": "regression/assertion-rubric-registry-carrier.json",
+      "target_profile_release_constraint": {
+        "binding_state": "WAITING_FOR_RELEASE_PUBLICATION",
+        "logical_profile": "synthetic-two-axis-desk",
+        "immutable_release_id_required_before_execution": true
+      },
+      "case_ids": [
+        "v1-carrier-01"
+      ],
+      "case_version": 1,
+      "status": "ACTIVE",
+      "mandatory": true,
+      "execution_state": "WAITING_FOR_RUBRIC_JUDGE",
+      "sha256": "de47ef961bfe263f6c52453c8625a5ed5b2b1a56a61a0c6d4d9f5f05b0f5e0be",
+      "negative_fixtures": {
+        "file": "regression/cases/synthetic-carrier-negatives-2026-09-03.json",
+        "sha256": "18c75d7dc1029f417621b9b776d76870b2c3c6a57b25fdf3a2c005f13ec44313"
+      }
+    }
+  ],
+  "archived_cases": [
+    {
+      "case_file": "regression/cases/retired-stage-v1-2026-09-02.json",
+      "profile_release": "retired-stage",
+      "target_profile_release_constraint": {
+        "binding_state": "WAITING_FOR_STEP_5_REGISTRY",
+        "logical_profile": "retired-stage",
+        "immutable_release_id_required_before_execution": true
+      },
+      "case_ids": [
+        "v1-retired-02",
+        "v1-retired-03"
+      ],
+      "case_version": 1,
+      "status": "ARCHIVED",
+      "mandatory": false,
+      "execution_state": "ARCHIVED_NOT_FOR_EXECUTION",
+      "sha256": "76cc1218b58306270e9881256296689ebcc4961e10fbb47cf3ddf08c796f997d",
+      "archived": {
+        "on": "2026-09-03",
+        "authority": "ADR-0039 decision 2",
+        "reason": "The authorisation context lapsed, NOT a quality problem. The corpus's usage_boundary permits offline replay and isolated Stage validation, and the context in which that was granted was 'this retired merchant is our own test tenant'. The first real tenant is now a different, industry-unknown merchant, so using this corpus to validate the engine for that merchant falls outside the grant even though it would fit the literal words. Where an authorisation boundary is ambiguous, read it narrowly.",
+        "quality_statement": "This corpus passed four independent review rounds with P0/P1 cleared, deterministic de-identification and hash anchoring. Nothing is wrong with it. It is retired because the goal it served no longer exists.",
+        "disposition": "retained, not deleted; never executed",
+        "invariants_extracted_to": "regression/invariants.json"
+      }
+    }
+  ]
+}

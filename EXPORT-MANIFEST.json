@@ -1,0 +1,19 @@
+{
+  "exported_from_commit": "51987786338a6dfca0d803849dd3207ec2b5855f",
+  "file_count": 668,
+  "withheld_count": 1224,
+  "rename_rules_applied": 14,
+  "sensitive_literals_replaced": 1,
+  "withheld_top_level": [
+    ".claude",
+    ".env.example",
+    ".github",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    "docs",
+    "evidence",
+    "gen2-program-plan.md"
+  ],
+  "note": "This tree is a filtered, renamed snapshot of a private repository. Identifiers and prose naming the former vendor and the first tenant's industry were renamed; captured message bodies had internal links replaced. The full audit of what was withheld and renamed stays with the private repository."
+}

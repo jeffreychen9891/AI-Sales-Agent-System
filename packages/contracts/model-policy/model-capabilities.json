@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Per-model capability annotations. A release may only bind a real-time tier to a model marked realtime_eligible; the loader refuses otherwise. Every entry must cite how it was observed, so an annotation cannot become folklore.",
+  "models": {
+    "deepseek-v4-flash": {
+      "provider_id": "deepseek",
+      "strict_structured_output": true,
+      "realtime_eligible": true,
+      "replay_gate_passed": true,
+      "replay_api_compatibility": "openai-responses-v1",
+      "replay_structured_output": "json_schema",
+      "reasoning_budget_risk": false,
+      "observed_at": "2026-09-02",
+      "observation": "三段真实 prompt 各一次调用：finish_reason=stop，直接返回合法 JSON，无 markdown 围栏；延迟 1.3-1.7s；输出 94-160 tokens。样本量 3，不构成统计结论。",
+      "replay_observation": "2026-09-02 改用 Responses JSON Schema、显式非思考后，每个实时角色 6 个多样样本均合同 6/6；24/24 completed、无截断，P95 1.31-1.97s。",
+      "aliases": ["deepseek-chat", "deepseek-reasoner"],
+      "alias_note": "同一账号下 deepseek-chat 与 deepseek-reasoner 的响应 model 字段均回填 deepseek-v4-flash（2026-09-02 实测）。别名可能随供应商调整而改指，因此 release 绑定具体 model id，不绑别名。"
+    },
+    "deepseek-v4-pro": {
+      "provider_id": "deepseek",
+      "strict_structured_output": false,
+      "realtime_eligible": false,
+      "replay_gate_passed": false,
+      "replay_api_compatibility": null,
+      "replay_structured_output": null,
+      "reasoning_budget_risk": true,
+      "observed_at": "2026-09-02",
+      "observation": "三段真实 prompt 各一次调用：UNDERSTAND 与 GENERATE 均 finish_reason=length，输出打满 max_tokens=1024 且可见正文分别为 200 与 0 字符、JSON 不可解析；PLAN 虽 stop 但输出 1392 tokens。延迟 22-28s，已超本项目 6s/8s/8s 的角色 deadline。",
+      "aliases": []
+    },
+    "deepseek-v4-flash-vision-exp": {
+      "provider_id": "deepseek",
+      "strict_structured_output": false,
+      "realtime_eligible": false,
+      "replay_gate_passed": false,
+      "replay_api_compatibility": null,
+      "replay_structured_output": null,
+      "reasoning_budget_risk": false,
+      "observed_at": null,
+      "observation": "未验证。vision 角色当前不在实时链路的三段推理中，未做结构化输出探测。",
+      "aliases": []
+    }
+  }
+}

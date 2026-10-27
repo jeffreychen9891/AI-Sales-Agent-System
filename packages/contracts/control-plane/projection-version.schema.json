@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/control-plane/projection-version.schema.json",
+  "title": "ProjectionVersion",
+  "description": "control-plane-parity.md 5.1. Carried by a read model so a page can submit its command with an expected version; a stale one is answered with conflict rather than a silent overwrite.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["aggregate_version", "profile_release_id", "as_of"],
+  "properties": {
+    "aggregate_version": {"type": "integer", "minimum": 0},
+    "profile_release_id": {"type": "string", "format": "uuid"},
+    "as_of": {"type": "string", "format": "date-time"}
+  }
+}

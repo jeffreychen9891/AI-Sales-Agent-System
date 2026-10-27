@@ -1,0 +1,41 @@
+{
+  "code": 0,
+  "data": [
+    {
+      "TenantId": 0,
+      "base64RawData": "CkdodHRwczovL3dld29yay5xcGljLmNuL3d3cGljM2F6L3d3d3hfMGUxNTQwY2UyNDAyMDc3ZDZmNWVjNGVkMTg5YWM3ZmYvMBACMiAwZTE1NDBjZTI0MDIwNzdkNmY1ZWM0ZWQxODlhYzdmZjjwAUDwAUoM5Yqo55S76KGo5oOFWGU=",
+      "cmd": 15000,
+      "customParam": "v2-stage-01",
+      "fromRoomId": 0,
+      "guid": "D05FCC41-9740-4932-81A4-6A54E8836AFF",
+      "isRoomNotice": 0,
+      "msgData": {
+        "extras": null,
+        "fileAesKey": "",
+        "fileHttpUrl": "https://wework.qpic.cn/wwpic3az/wwwx_0e1540ce2402077d6f5ec4ed189ac7ff/0",
+        "fileId": "",
+        "fileMd5": "0e1540ce2402077d6f5ec4ed189ac7ff",
+        "fileSize": 0,
+        "filename": "动画表情",
+        "height": 240,
+        "sourceDesc": "",
+        "sourceType": 101,
+        "type": 2,
+        "width": 240
+      },
+      "msgFlag": 16777216,
+      "msgServerId": 1000880,
+      "msgType": 104,
+      "msgUniqueIdentifier": "881563371063039673",
+      "receiverId": "<id-01>",
+      "referId": 0,
+      "requestId": "51149c7ad210eb8c72f6ebf2f0e457b5",
+      "senderId": "<id-02>",
+      "senderName": "",
+      "seq": 17350631,
+      "timestamp": 1789020193,
+      "userId": "<id-01>"
+    }
+  ],
+  "msg": "ok"
+}

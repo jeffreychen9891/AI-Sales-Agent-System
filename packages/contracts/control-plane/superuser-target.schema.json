@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastagent.local/contracts/control-plane/superuser-target.schema.json",
+  "title": "SuperuserTarget",
+  "description": "control-plane-parity.md 5.2. Submitted explicitly on every cross-tenant call and never saved as a default context. `reason` is required and must not be blank: an unexplained cross-tenant reach is the thing this contract exists to make impossible to record silently.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["target_tenant_id", "reason"],
+  "properties": {
+    "target_tenant_id": {"type": "string", "format": "uuid"},
+    "reason": {"type": "string", "minLength": 1}
+  }
+}

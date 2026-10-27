@@ -1,0 +1,55 @@
+{
+  "code": 0,
+  "data": [
+    {
+      "TenantId": 0,
+      "base64RawData": "Cg8IABILCgnkvaDlpb3lkJcKDggDEgoKCFvmg4rorrZdCg4IAxIKCghb5oao56yRXQoOCAMSCgoIW+mqt+mrhV0KDggDEgoKCFvmlbLmiZNd",
+      "cmd": 15000,
+      "customParam": "v2-stage-01",
+      "fromRoomId": 0,
+      "guid": "D05FCC41-9740-4932-81A4-6A54E8836AFF",
+      "isRoomNotice": 0,
+      "msgData": {
+        "atList": [],
+        "content": "你好吗[惊讶][憨笑][骷髅][敲打]",
+        "extras": null,
+        "moreDetail": [
+          {
+            "subtype": 0,
+            "text": "你好吗"
+          },
+          {
+            "subtype": 3,
+            "text": "[惊讶]"
+          },
+          {
+            "subtype": 3,
+            "text": "[憨笑]"
+          },
+          {
+            "subtype": 3,
+            "text": "[骷髅]"
+          },
+          {
+            "subtype": 3,
+            "text": "[敲打]"
+          }
+        ],
+        "reply": {}
+      },
+      "msgFlag": 16777216,
+      "msgServerId": 1000889,
+      "msgType": 2,
+      "msgUniqueIdentifier": "9078406011823019525",
+      "receiverId": "<id-01>",
+      "referId": 0,
+      "requestId": "3b7e4901448c0573247f11e9468d131c",
+      "senderId": "<id-02>",
+      "senderName": "",
+      "seq": 17350634,
+      "timestamp": 1789020220,
+      "userId": "<id-01>"
+    }
+  ],
+  "msg": "ok"
+}
