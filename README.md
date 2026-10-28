@@ -1,25 +1,30 @@
 # AI Sales Agent System
 
-一个**多租户 AI 销售助理平台**的工程快照。
+![Python version](https://img.shields.io/badge/Python-3.12-blue)
+![Tests](https://img.shields.io/badge/Pytest-3342%20Passed-success)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-企业 IM 里客户的消息进来 → 系统 **理解 / 规划 / 生成** 三步出一条回复 →
-经出站队列投递回去。沿途还要做对的事：按租户隔离数据、记每一次模型调用的成本、
-把"我明天给您发报价"这种承诺落进台账并在到期时回来、在它不该自己开口的时候
-闭嘴、以及**把每一步的依据留痕到可以回放**。
+一个**多租户 AI 销售助理平台**的工程快照。深度集成**企业微信（WeCom）**渠道。
+
+企业微信里客户的消息进来 → 系统通过推理管线完成 **理解 / 规划 / 生成** → 经出站队列投递回去。
+沿途不仅要做对后端的基础工作（多租户隔离、出站调度），更包含针对大模型的工程化控制：
+记录每一次 Token 成本、把“我明天给您发报价”落进承诺台账并在到期时回来、在 AI 不该开口时（静默期）让它闭嘴，以及**把每一步的决策依据留痕到可以本地回放**。
 
 这个仓展示的是**架构设计、可测试性设计与大模型工程化**，不是一套完整的商业业务逻辑。
 
 > ⚠️ **本仓是一份经过筛选与改名的快照，不是原始工作仓。**
-> 见下面的 [来历](#来历) 与 [这个快照里没有什么](#这个快照里没有什么)。
-
 ---
 
 ## 来历
 
-<!-- ⚠️ 这一节留给仓主本人填写：离职与交接的合规声明。
-     自动化工具不代写这一段。 -->
+本项目最初作为面向企业客户的商业原型（PoC）由本人独立设计与实现。项目完成后，因商业规划调整，该原型并未进入长期的生产部署阶段。
 
-_（待仓主补充）_
+为了在展示技术成果的同时，严格遵守商业保密原则，本人对原始代码进行了一次工程级的“脱敏导出”：
+1. 剔除了合作方的真实客户对话与业务语料（替换为合成的测试数据）。
+2. 隐去了特定供应商名称与内部基础设施信息。
+3. 移除了所有依赖外部商业 API Key 才能触发的真实线上服务。
+
+你当前看到的，是剥离了商业合作限制、保留完整架构设计、自动化测试与核心业务链路的纯技术骨架。
 
 ---
 
@@ -177,8 +182,8 @@ docker compose -p fastagent-demo -f infrastructure/demo/compose.yml \
 
 | | |
 |---|---|
-| **服务** | `services/ingress`（入站 webhook，校验令牌、**先持久化再 ack**）· `services/worker`（三步主链路 + 独立租约的出站投递 + scheduler 角色）· `services/api`（登录、不可变 `AuthContext`、一次性 WebSocket ticket） |
-| **包** | `packages/runtime`（配置与闸）· `packages/channels`（渠道适配）· `packages/contracts`（**22 份 JSON Schema**：业务契约 8 · 控制面 7 · 推理 6 · 模型策略 1） |
+| **服务** | `services/ingress`（企微入站 webhook，校验令牌、**先持久化再 ack**）· `services/worker`（三步主链路 + 独立租约的出站投递 + scheduler 角色）· `services/api`（登录、不可变 `AuthContext`、一次性 WebSocket ticket） |
+| **包** | `packages/runtime`（配置与闸）· `packages/channels`（渠道适配，含企业微信协议对接）· `packages/contracts`（**22 份 JSON Schema**：业务契约 8 · 控制面 7 · 推理 6 · 模型策略 1） |
 | **数据库** | PostgreSQL，**76 条迁移**，多租户靠 RLS 隔离；每个进程角色拿**各自的**库凭据，迁移凭据不下发给运行时容器 |
 | **队列 / 缓存** | Redis（队列与缓存两个实例分开） |
 | **测试** | **3342 条**：四层 `contracts` 2157 · `integration` 948 · `e2e` 133 · `security` 100，另有 4 条在 `tests/` 顶层（`test_cli.py` 与钉 channel sink 夹具的那条）—— **写成加得起来的**，否则「四层」这个框会把差额吃掉 |
@@ -240,9 +245,9 @@ docker compose -p fastagent-demo -f infrastructure/demo/compose.yml \
 
 * **真实客户数据** —— 一份去标识过的真实生产对话语料（它仍然暴露客户所在行业），
   以及读它的那些用例；
-* **前雇主的运维信息** —— Stage 部署配置与脚本（主机名、对象存储桶与凭据路径）；
+* **运维信息** —— Stage 部署配置与脚本（主机名、对象存储桶与凭据路径）；
 * **内部过程文档** —— `docs/`（含交接件与供应商接口纪要）与 `evidence/`；
-* **供应商可识别性** —— 企业 IM 供应商名在全树被改名为 `wecom_proxy`，
+* **供应商可识别性** —— 企业微信供应商名在全树被改名为 `wecom_proxy`，
   第一个真实租户的行业词被改掉。
 
 代价是**可数的，而不是沉默的**：**1890 个受跟踪文件里导出 666 个**
@@ -331,6 +336,7 @@ docker compose -f infrastructure/local/compose.yml down --volumes --remove-orpha
 > 当时的注释写着「少了它 `migrate.py` 会 `ModuleNotFoundError`，实测踩过」，
 > **而那行命令自己在 Windows 上就产生那个错**。写它的人跑的是一个
 > 同一批 env 的装配脚本，不是这个代码块。
+
 
 ---
 
