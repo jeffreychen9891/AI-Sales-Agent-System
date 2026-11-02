@@ -1,7 +1,7 @@
 # AI Sales Agent System
 
 ![Python version](https://img.shields.io/badge/Python-3.12-blue)
-![Tests](https://img.shields.io/badge/Pytest-3342%20Passed-success)
+![Tests](https://img.shields.io/badge/Pytest-3343%20Passed-success)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 一个**多租户 AI 销售助理平台**的工程快照。深度集成**企业微信（WeCom）**渠道。
@@ -40,7 +40,7 @@ pytest tests/contracts -q
 实测产出（Python 3.12 / CPython，耗时约 27 秒）：
 
 ```
-2104 passed, 53 skipped
+2105 passed, 53 skipped
 ```
 
 > 这个数和下面每一个数都是**跑出来的，不是算出来的**，
@@ -186,7 +186,7 @@ docker compose -p fastagent-demo -f infrastructure/demo/compose.yml \
 | **包** | `packages/runtime`（配置与闸）· `packages/channels`（渠道适配，含企业微信协议对接）· `packages/contracts`（**22 份 JSON Schema**：业务契约 8 · 控制面 7 · 推理 6 · 模型策略 1） |
 | **数据库** | PostgreSQL，**76 条迁移**，多租户靠 RLS 隔离；每个进程角色拿**各自的**库凭据，迁移凭据不下发给运行时容器 |
 | **队列 / 缓存** | Redis（队列与缓存两个实例分开） |
-| **测试** | **3342 条**：四层 `contracts` 2157 · `integration` 948 · `e2e` 133 · `security` 100，另有 4 条在 `tests/` 顶层（`test_cli.py` 与钉 channel sink 夹具的那条）—— **写成加得起来的**，否则「四层」这个框会把差额吃掉 |
+| **测试** | **3343 条**：四层 `contracts` 2158 · `integration` 948 · `e2e` 133 · `security` 100，另有 4 条在 `tests/` 顶层（`test_cli.py` 与钉 channel sink 夹具的那条）—— **写成加得起来的**，否则「四层」这个框会把差额吃掉 |
 
 依赖锁定到哈希（`requirements*.lock`），门禁是 `ruff` + `mypy --strict`
 （strict 覆盖 170 个源文件，0 error —— 这个数是在**公开树里**跑出来的，
@@ -198,10 +198,15 @@ docker compose -p fastagent-demo -f infrastructure/demo/compose.yml \
 > 一个会停在第一个缺失脚本上的门禁脚本，比没有门禁脚本更糟 ——
 > 读者会照着它去跑，然后得到一个看起来像自己环境问题的 `No such file`。
 > 所以它跟着一起不出去，而不是留一个跑不起来的壳。
-> 上面那两条命令（`ruff` / `mypy`）在这棵树里是可以直接跑的，而且**是跑过的**：
-> `ruff check` 零发现，`mypy --strict` 170 files / 0 error。
+> 上面那两条命令在这棵树里是可以直接跑的，而且**是跑过的**：
+> `ruff check .` 零发现，`mypy packages services scripts` 170 files / 0 error。
+> **这两条就是完整命令** —— 特别是 mypy 那一条不要缩成 `mypy .`：
+> 那会把 `tests/` 一起拉进来，而 `tests/contracts` 里两个模块按裸模块名
+> import `return_path_builders`，于是得到 8 条与生产代码无关的错。
+> 这一版之前只写了「`mypy --strict`」，把选路径这一步留给了读者 ——
+> 一条声明了却无法照抄复核的命令，和「声明了但不存在」是同一类问题。
 > 这不是顺带一句 —— 在导出工具加上那道闸之前，**这棵树的 `ruff check` 是 17 条红**，
-> 16 条是改名的直接后果（`WeComProxy*` → `WeComProxy*` 改掉的是标识符，
+> 16 条是改名的直接后果（改名改掉的是标识符，
 > 而 isort 按字母排序，于是本来排好的导入块变成了没排好的）。
 > 源仓 ruff 绿而公开树不绿，两棵树之间隔着一张改名表 ——
 > 「证据取自另一个环境」这条在这个仓里被抓到过很多次，这是其中一次。
@@ -246,12 +251,16 @@ docker compose -p fastagent-demo -f infrastructure/demo/compose.yml \
 * **真实客户数据** —— 一份去标识过的真实生产对话语料（它仍然暴露客户所在行业），
   以及读它的那些用例；
 * **运维信息** —— Stage 部署配置与脚本（主机名、对象存储桶与凭据路径）；
-* **内部过程文档** —— `docs/`（含交接件与供应商接口纪要）与 `evidence/`；
+* **内部过程文档** —— `docs/` 里**除这份作品集笔记之外**的部分（交接件与供应商接口纪要）
+  与 `evidence/`；
 * **供应商可识别性** —— 企业微信供应商名在全树被改名为 `wecom_proxy`，
   第一个真实租户的行业词被改掉。
 
-代价是**可数的，而不是沉默的**：**1890 个受跟踪文件里导出 666 个**
-（加上这两份作品集文档与一份导出清单，公开树共 669 个文件）。
+代价是**可数的，而不是沉默的**：**1890 个受跟踪文件里导出 666 个**。
+再加上三份为公开而写的文件（本 README、`docs/ENGINEERING-NOTES.md`、`LICENSE`）
+与一份导出清单，公开树共 **670** 个文件。
+清单里的 `file_count` 仍是导出当时的 668（666 + 两份文档，不把自己数进去）——
+差的 2 是后来补的 `LICENSE` 与清单自身，不是少了两个文件。
 扣下的 1224 个里，**每一个都在私有一侧的审计报告里带着触发它的那个词** ——
 一个只给总数的报告答不了"为什么少了这一条用例"。
 "一个悄悄少了四百条用例的导出，读起来和『这个项目只有这么多用例』一模一样" ——
@@ -328,7 +337,7 @@ docker compose -f infrastructure/local/compose.yml down --volumes --remove-orpha
 > ```
 >
 > 唯一那条 skip 是 `test_wecom_proxy_guard.py` 里一条只在 Linux 上成立的
-> POSIX 权限断言。`tests/contracts` 那 2157 条不需要栈，上面第一节那条命令就是它。
+> POSIX 权限断言。`tests/contracts` 那 2158 条不需要栈，上面第一节那条命令就是它。
 >
 > ⚠️ **"逐字抄下来跑"这个口径不是炫耀，是上一版栽在它上面。**
 > 上一版这一节与上面那节的 `PYTHONPATH` 都写死了 `:` 作分隔符 ——
@@ -354,3 +363,14 @@ docker compose -f infrastructure/local/compose.yml down --volumes --remove-orpha
 | `scripts/demo_drive.py` | 让同一通对话走真实链路 —— ingress → inbox → outbox，第 3 轮走 scheduler |
 | `infrastructure/demo/` | 演示那套依赖的 compose 与开关 |
 | `docs/ENGINEERING-NOTES.md` | **这个仓真正想让人看的东西** |
+
+---
+
+## 许可
+
+MIT —— 见 [LICENSE](LICENSE)。
+
+> 上面那些徽章里「License MIT」这一条，在这个文件出现之前只是一句**没有对应文件**的声明
+> （GitHub 的仓库侧栏因此显示 "no license"）。按本仓自己的规矩，
+> 「声明了但不存在」是最贵的一类错误，所以补的是这份文件，不是把那句话删掉。
+

@@ -355,6 +355,12 @@ def render_html(trace: Trace) -> str:
 
 
 def main() -> int:
+    # Windows 控制台默认不是 UTF-8（cp1252 / cp936），中文会在这里半截死掉 ——
+    # 而这是 README 让读者跑的**第一条**命令，死状是一个 UnicodeEncodeError
+    # 回溯，读起来像项目坏了。`demo_drive.py` 早就有这道闸，这一条漏了。
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="渲染一通对话的决策轨迹")
     parser.add_argument("scenario", type=Path, help="demo/scenarios/*.json")
     parser.add_argument("--html", type=Path, default=None, help="同时写一份 HTML")

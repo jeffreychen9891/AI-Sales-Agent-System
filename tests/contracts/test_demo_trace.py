@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -254,3 +256,29 @@ def test_the_html_needs_no_external_resource(trace_module: Any, trace: Any) -> N
     page = trace_module.render_html(trace)
     for forbidden in ("http://", "https://", "<script", "<link", "@import"):
         assert forbidden not in page, f"外部资源或脚本漏进了 HTML：{forbidden}"
+
+
+def test_the_terminal_render_survives_a_non_utf8_console() -> None:
+    """README 的第一条命令不许死在编码上。
+
+    复现的是读者的真实处境：`PYTHONIOENCODING` 没设、stdout 不是 UTF-8
+    （Windows 默认的 cp1252 / cp936）。没有 `sys.stdout.reconfigure` 时，
+    渲染到第一个中文字符就是 `UnicodeEncodeError` —— 而那个回溯读起来
+    像项目坏了，不像环境问题。实测在 Windows 上是这条命令的第一屏。
+
+    强制 `cp1252` 而不是赌 CI 的 locale：在 Linux 上也一样复现得了，
+    所以这条守卫与平台无关。
+    """
+
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "cp1252"
+    env.pop("PYTHONUTF8", None)
+    completed = subprocess.run(  # noqa: S603 - 固定 argv，无 shell
+        [sys.executable, str(ROOT / "scripts" / "demo_trace.py"), str(SCENARIO)],
+        cwd=ROOT,
+        capture_output=True,
+        env=env,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr.decode("utf-8", "replace")
+    assert "第 1 轮" in completed.stdout.decode("utf-8")

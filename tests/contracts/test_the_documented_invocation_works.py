@@ -12,7 +12,7 @@
 作品集 README 的第一条命令是 `pytest tests/contracts -q`（控制台脚本，不走
 `-m`），照抄跑是 **12 errors during collection**；
 `pytest tests/integration tests/e2e tests/security -q` 是 **65 errors**。
-而那条命令旁边写着「实测产出 2102 passed, 53 skipped」——
+而那条命令旁边写着「实测产出 2105 passed, 53 skipped」——
 **那个数是真的，只是它是另一条命令跑出来的。**
 
 **为什么不去调 `pytest.exe`**：那要求控制台脚本装在一个找得到的位置，

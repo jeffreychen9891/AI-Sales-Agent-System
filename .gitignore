@@ -5,6 +5,8 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+# 演示渲染的产物（README 里那条 --html trace.html），不进仓。
+trace.html
 .ruff_cache/
 .coverage
 coverage.xml
@@ -34,7 +36,9 @@ id_rsa
 id_ed25519
 
 # 供应商给的原始参考资料：含未打码的密钥样本值，check_secrets 会拒。
-# 见 docs/wecom-proxy-message-callback.md「原文有意不入库」。
+# 见 docs/wecom-proxy-message-callback.md「原文有意不入库」——
+# 那份文档本身属于内部过程文档，**没有随这棵树导出**，所以上面这条路径是
+# 私有一侧的坐标，不是本仓里能找到的文件。
 wecom-proxy-message.md
 
 # 本机才有的输入：**进得来、不进仓**。

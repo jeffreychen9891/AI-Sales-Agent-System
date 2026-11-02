@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "ai-sales-agent-system"
 version = "0.0.1"
 description = "FastAgent v2 M0 walking skeleton"
+license = { text = "MIT" }
 requires-python = ">=3.12"
 dynamic = ["dependencies"]
 
@@ -71,7 +72,7 @@ pythonpath = [
   # `pytest tests/contracts -q`（控制台脚本，**不加这一句**），
   # 在导出树里照抄跑是 **12 errors during collection**；
   # `pytest tests/integration tests/e2e tests/security -q` 是 **65 errors**。
-  # 旁边还写着「实测产出 2102 passed」—— 那个数是真的，只是它是
+  # 旁边还写着「实测产出 2105 passed」—— 那个数是真的，只是它是
   # `python -m pytest` 跑出来的，而文档让人跑另一条命令。
   # **「门禁怎么调」与「文档让人怎么调」是两个事实，而只有前一个被验过。**
   #
